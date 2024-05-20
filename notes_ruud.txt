@@ -1,0 +1,65 @@
+
+ 	          Diagnostic ROM for IBM-PC/XT and compatibles
+
+		   Written by Ruud Baltissen - up to version V3
+
+			from version 3.0 on: modem7 at the Vintage Computer Federation Forums
+
+
+   To be compiled with NASM 2.11 or higher. Not tested with older versions.
+
+
+ Notes:
+ -	This ROM can be used to diagnose the IBM-PC, IBM-XT and compatible 
+	computers.
+ -	This version only supports the MDA and CGA video adapter. The reason: 
+	the EGA and VGA cards need to be initialized by their own ROMs and I'm
+	sure that they run subroutines and therefore need RAM for the stack. 
+	The Landmark diagnostic ROM supports EGA by using its own routines but
+	1) IMHO that needs more effort than it is worth the trouble and time
+	and 2) and EGA monitors are rare nowadays.
+
+ -	This test simply expects that a MDA or a CGA video card is present. In
+	case both cards are present, in this version only the MDA card will be
+	used.
+ -	After the checksum test the program will beep to inform the user that
+	the test is running fine so far. But if there is nothing on the screen
+	at that point, there is either something wrong with the board or the
+	video system.
+ -	If the CPU is to be found bad, the test stops. Why continuing with a
+	bad processor? Remark: a bad EPROM can cause this error as well.
+ -	If the checksum of the EPROM is not correct, the test stops. If I can't
+	trust the EPROM, can I trust the outcome of the following tests?
+ -	If the program can't find 2 KB of good memory from 0000:0000h on, the
+	test will stop as well. The rest of the program needs RAM for the
+	interrupt vectors and subroutines. Without RAM that is not possible. 
+	I know Landmark can continue by using this ROM-Stack method but this is
+	a very labour intensive way of programming. I'm interested in repairing
+	PCs with this tool and if the memory is bad, then repair that problem
+	first before looking for possible other problems.
+ -	General remark: broken glue logic and buffers can cause errors that are
+	interpreted wrong by this diagnostic ROM or errors that won't be 
+	detected at all. For example: a broken data buffer can cause that 
+	nothing shows up at the screen althought the video card itself is fine.
+
+
+ Versions
+	This is a project I do just for fun. So I had no intention to keep
+	track of any change I made. In case of a major change I will save a
+	dated copy for myself but that was all.
+ V2:
+	But in october 2022 I decided for an important change: use the not-used
+	video RAM as stack. The advantage: the whole is MUCH more easier to 
+	program. The minor disadvantage: only MDA and CGA video cards are supported.
+
+
+ Disclaimer
+ -	All names with a copyright are acknowledged.
+ -	Some information is derived from deduction after reading a lot of
+	documents and can be unreliable due to the lack of real proof.
+ -	If you use this source code and the resulting binary, then it is on
+	your own account. I cannot be held responsible for blowing up your
+	computer, mother-in-law or whatever; it will always be your own fault.
+	USING THIS SOURCE CODE AND ITS BINARY IS COMPLETELY AT YOUR OWN RISK !!!
+ -	I'm a Dutchman and English is not my native language. So you can expect
+	to find several linguistic mistakes.

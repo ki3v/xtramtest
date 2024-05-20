@@ -1,0 +1,44 @@
+#!/usr/bin/env perl
+
+use strict;
+# use Data::Dumper;
+
+my $h = qr/[0-9A-Fa-f]+/;
+my $ph;
+my %sect;
+
+my $text = 0;
+my $bss = 0;
+
+sub header { 
+	return if $ph;
+	printf "%6s %6s %6s %6s  %8.8s  %s\n", "start", "end", "sz.h", "size", "bits", "name";
+	$ph = 1;
+}
+
+while ( <> ) {
+	if ( m/^\s*([[:xdigit:]]+)\s+([[:xdigit:]]+)\s+([[:xdigit:]]+)\s+([[:xdigit:]]+)\s+(\S+bits)\s+(\S+)$/ ) {
+		header;
+		my $start = hex( $2 );
+		my $end = hex( $3 );
+		my $size = hex( $4 );
+		my $bits = $5;
+		my $name = $6;
+		$sect{$name} = { start => $start, end => $end, size => $size, bits => $bits, name => $name };
+		printf "%6X %6X %6X %6d  %8.8s  %s\n", $start, $end, $size, $size, $bits, $name;
+		if ( $bits eq "progbits" ) {
+			$text += $size;
+		} else {
+			$bss += $size;
+		}
+	} elsif ( m/Sections \(detailed\)/ ) {
+		last;
+	}
+}
+
+printf "\n%6d bytes text\n%6d bytes bss\n", $text, $bss;
+
+if ( exists $sect{".resetvec"} and exists $sect{".text"} ) {
+	printf "\n%d bytes ROM space free\n\n", $sect{".resetvec"}{start} - $sect{".text"}{end};
+	exit;
+}

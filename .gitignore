@@ -1,0 +1,11 @@
+*.8k
+*.32k
+*.lst
+*.map
+*.debug
+*.i
+*.o
+.vscode
+cfg
+roms
+comments

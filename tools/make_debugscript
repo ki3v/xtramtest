@@ -1,0 +1,30 @@
+#!/usr/bin/env perl
+use strict;
+my $break = join( "|", split( / /, $ENV{BREAK} ) );
+my $qrBreak = qr/$break/;
+my $sects = join( "|", split( / /, $ENV{SECTS} ) );
+my $qrSects = qr/$sects/;
+
+my $scanning = 0;
+my $section;
+
+while (<>) {
+	m/^-- Symbols --/ and last;
+}
+
+while (<>) {
+	if ( m/^---- Section (\S+) ----/ ) {
+		$section = $1;
+		$scanning = $section =~ $qrSects;
+		next;
+	}
+	next unless $scanning;
+
+	unless ( m/\s+([0-9A-F]+)\s+(\1)\s+(\S+)\s*$/ ) { next; }
+
+	print "comadd F$1, $section $3\n";
+
+	if ( m/([0-9A-F]+)\s+($break)\s*$/ ) {
+		print "bps F$1\n";
+	}
+}

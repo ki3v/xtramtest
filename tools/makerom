@@ -1,0 +1,30 @@
+#!/usr/bin/env perl
+# for 8K ROM
+# calculate the checksum and set the last byte to make the sum 0
+# concatenate the file 4 times to make a 32K image
+
+use strict;
+use bytes;
+
+my $insize = 8*1024;
+my $copies = 4;
+
+my $fn = $ARGV[0];
+
+open my $fh, "<", $fn or die "$_[0]: $!\n";
+binmode $fh;
+binmode STDOUT;
+
+my $bytes;
+$/ = undef;
+$bytes = <$fh>;
+close $fh;
+
+my $count = length( $bytes );
+die "file is the wrong size: $count != $insize\n" unless $count == $insize;
+
+my $sum = unpack( "%8C*", $bytes );
+my $diff = ( 0x100 - $sum ) & 0xFF;
+substr( $bytes, -1, 1, chr( $diff ) );
+
+for ( 1..$copies ) { print $bytes; }
