@@ -4,7 +4,7 @@
 ; ************************************************************************************************
 %include "defines.inc"
  
-[map all xtdiag_ki3v.map]
+[map all xtramtest.map]
 
 START		equ	0E000h
 RESET		equ	0FFF0h
@@ -19,6 +19,8 @@ section .resetvec 	start=RESET align=1
 section .rwdata		start=InvScreenRAM align=1 nobits
 rwdata_start:
 
+; %define num_segments 8
+%define num_segments 40
 
 ; ---------------------------------------------------------------------------
 section .rwdata ; MARK: __ .rwdata __
@@ -74,12 +76,18 @@ section .romdata ; MARK: __ .romdata __
 ; 	; db __DATE__		; Compiled date (YYYY-MM-DD)
 ; 	; db ')', 0
 
-title_attr	equ	1Fh
+; title_attr	equ	1Fh
+title_attr	equ	0Ah
 ; title_attr	equ	71h
+subtitle_attr	equ	02h
 title_text: ; attr, x, y, text, 0 (terminate with 0 for attr)
 			db 	title_attr,   1,  0
-	title_only:	db	"KI3V XTDIAG (", __DATE__, ")", 0
-			db	title_attr,  53,  0, "github.com/ki3v/xtramtest", 0
+	title_only:	db	"XTRAMTEST ", 
+			%include "version.inc"
+			db " (", __DATE__, ")", 0
+			; db 0
+			db	title_attr,  54,  0, "github.com/ki3v/xtramtest", 0
+			db	subtitle_attr,  4,  1, "by Dave Giller - with Adrian Black - youtube.com/@adriansdigitalbasement", 0
 			db	0
 
 ; ---------------------------------------------------------------------------

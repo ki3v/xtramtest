@@ -253,7 +253,7 @@ test_bitpat:
 ; 	si = size of segment to test (must be a multiple of 16)
 		xor	al, al
 		xor	bx, bx
-		mov	dl, 40
+		mov	dl, num_segments
 		mov	si, 0x4000
 		call	ram_test_bitpat
 

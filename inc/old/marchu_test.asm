@@ -1,4 +1,4 @@
-; code: language=nasm tabSize=4
+; code: language=nasm tabSize=8
 
 BITS 16
 CPU 8086
@@ -44,41 +44,41 @@ org 0x100
 march_u:
 	.init:
 		cld					; clear direction flag (forward)
-		lea bp, .bad		; XXX set the error callback
+		lea	bp, .bad		; XXX set the error callback
 
 	; step 0; up - w0 - write the test value
 	.step0:
-		mov bx, dx			; bx is a temporary segment counter
+		mov	bx, dx			; bx is a temporary segment counter
 	.s0_seg_loop:
-		test bh, 0F0h		; check high 4 bits of bx
-		jz .s0_lt64k		; if high 4 bits of bx are 0, then there is less than 64k left
-		sub bx, 1000h		; remove 64k from the counter
-		xor cx, cx			; we have more than 64k, so do the next 64k
-		jmp .s0_fill		; fill the range with the test value
+		test	bh, 0F0h		; check high 4 bits of bx
+		jz	.s0_lt64k		; if high 4 bits of bx are 0, then there is less than 64k left
+		sub	bx, 1000h		; remove 64k from the counter
+		xor	cx, cx			; we have more than 64k, so do the next 64k
+		jmp	.s0_fill		; fill the range with the test value
 	.s0_lt64k:
-		sub bx, 0			; test if BX is zero
-		jz .s0_done			; if BX is zero, we are done
-		mov cl, 4			; we have less than 64k, so do the rest
-		shl bx, cl			; convert pages to bytes
-		mov cx, bx			; set byte counter
+		sub	bx, 0			; test if BX is zero
+		jz	.s0_done			; if BX is zero, we are done
+		mov	cl, 4			; we have less than 64k, so do the rest
+		shl	bx, cl			; convert pages to bytes
+		mov	cx, bx			; set byte counter
 
 	.s0_fill:
-		mov di, 0			; beginning of the segment
-		rep stosb			; [di++] = al; cx--  (fill the range with the test value)
-		jmp .s0_seg_loop	; repeat for the next segment
+		mov	di, 0			; beginning of the segment
+		rep	stosb			; [di++] = al; cx--  (fill the range with the test value)
+		jmp	.s0_seg_loop		; repeat for the next segment
 
 	.s0_done:
 
 	
 	; step 1; up - r0,w1,r1,w0
 	.step1:
-		mov bx, dx			; bx is a temporary segment counter
+		mov	bx, dx			; bx is a temporary segment counter
 	.s1_seg_loop:
-		test bh, 0F0h		; check high 4 bits of bx
-		jz .s1_lt64k		; if high 4 bits of bx are 0, then there is less than 64k left
-		sub bx, 1000h		; remove 64k from the counter
-		xor cx, cx			; we have more than 64k, so do the next 64k
-		jmp .s1_test		; fill the range with the test value
+		test	bh, 0F0h		; check high 4 bits of bx
+		jz	.s1_lt64k		; if high 4 bits of bx are 0, then there is less than 64k left
+		sub	bx, 1000h		; remove 64k from the counter
+		xor	cx, cx			; we have more than 64k, so do the next 64k
+		jmp	.s1_test		; fill the range with the test value
 	.s1_lt64k:
 		sub bx, 0			; test if BX is zero
 		jz .s1_done			; if BX is zero, we are done

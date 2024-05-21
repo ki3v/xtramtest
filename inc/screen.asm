@@ -48,11 +48,15 @@ scr_k_labels		db 	grid_k_attr, x_k_start,    y_grid_start+ 5, " 64K", 0
 
 scr_test_normal_attr	equ	0x07
 scr_test_header_attr	equ	0x0F
-scr_test_header_xy:	equ	0x0200
+scr_test_header_xy:	equ	0x0302
 scr_test_header:	asciiz	"Pass "
 scr_test_separator:	asciiz	": "
 scr_label_march:	asciiz	"March-U "
 scr_label_bit:		asciiz	"Bit Pattern "
+
+scr_sep_line		equ	2
+scr_sep_char		equ	0xC4
+scr_sep_attr		equ	0x02
 
 scr_err_attr		equ	0x0C
 scr_ok_attr		equ	0x07
@@ -108,8 +112,16 @@ _h_to_u8:
 		ret
 
 
-; MARK: scr_clear_line
 scr_clear_line:
+	push	ax
+	mov	al, ' '
+	call	scr_fill_line
+	pop	ax
+	ret
+
+
+; MARK: scr_clear_line
+scr_fill_line:
 	push	ax
 	push	cx
 	push	es
@@ -127,7 +139,7 @@ scr_clear_line:
 
 	mov	ah, [ss:scrAttr]
 	mov	di, [ss:scrPos]		; get current cursor position
-	mov	al, ' '
+	; mov	al, ' '
 	mov	cx, 80
 
 	rep	stosw
@@ -155,7 +167,7 @@ scr_test_announce:
 	mov	dx, scr_test_header_xy
 	call	scr_goto
 	call	scr_clear_line
-
+	call	scr_goto
 	mov	si, scr_test_header
 	call	scr_puts
 
@@ -582,6 +594,14 @@ draw_screen:
 	; call	scr_clear_line
 	mov	si, title_text
 	call	scr_puts_labels
+
+	mov	ah, scr_sep_attr
+	call	scr_set_attr
+	mov	dh, 2
+	xor	dl, dl
+	call	scr_goto
+	mov	al, scr_sep_char
+	call	scr_fill_line
 
 ; 	mov	ah, 0Ah			; bright green on black
 ; 	mov	dx, 1800h

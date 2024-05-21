@@ -19,4 +19,4 @@ ROPTS="-skip_gameinfo -cheat -uimodekey END -nomouse -volume -20"
 DOPTS="-debugger_font 'JetBrains-Mono' -debugger_font_size 14 -update_in_pause"
 
 set -x
-mame $MOPTS -rompath ./roms $ROPTS $DOPTS $VOPTS -debugscript xtdiag_ki3v.debug $*
+mame $MOPTS -rompath ./roms $ROPTS $DOPTS $VOPTS -debugscript xtramtest.debug $*
