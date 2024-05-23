@@ -13,7 +13,7 @@
 ; ---------------------------------------------------------------------------
 section_save
 section .romdata ; MARK: __ .romdata __
-	; bit_table	db	0x55, 0xAA, 0xFF, 0x00, 0x01
+	; bit_table	db	0x00, 0xFF, 0x55, 0xAA, 0x01
 	; bit_table_len	equ	$-bit_table
 	; ram_col_header	db	"A  ErrM ErrB"
 
@@ -47,13 +47,13 @@ ram_test_bitpat:
 		mov	[ss:test_label], word scr_label_bit
 		mov	bp, bitpat_segment
 
-		mov	al, 0x55
-		call	bitpat_one_test
-		mov	al, 0xAA
+		mov 	al, 0x00
 		call	bitpat_one_test
 		mov	al, 0xFF
 		call	bitpat_one_test
-		mov 	al, 0x00
+		mov	al, 0x55
+		call	bitpat_one_test
+		mov	al, 0xAA
 		call	bitpat_one_test
 		mov	al, 0x01
 		call	bitpat_one_test
@@ -225,11 +225,12 @@ bitpat_endseg:
 ;	dh = error bits (0 = no error)
 ;	es:di = address of the error
 ;
+; this test
 ;
 ; MARK: bitpat_segment
 bitpat_segment:	; w0
 		mov	ah, al		; save the test value into ah
-		xor	dh, dh		; clear the error bits
+		; xor	dh, dh		; clear the error bits
 
 		xor	si, si		; start SI at the beginning of the segment
 		mov	di, cx		; start DI at the end of the segment
