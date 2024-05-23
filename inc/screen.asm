@@ -19,7 +19,7 @@ section .rwdata ; MARK: __ .rwdata __
 ; ---------------------------------------------------------------------------
 section .romdata ; MARK: __ .romdata __
 ; ---------------------------------------------------------------------------
-y_grid_start	equ	6
+y_grid_start	equ	7
 x_grid_start	equ	7
 x_grid_loffs	equ	6
 ; grid_head_attr	equ	30h
@@ -48,7 +48,7 @@ scr_k_labels		db 	grid_k_attr, x_k_start,    y_grid_start+ 5, " 64K", 0
 
 scr_test_normal_attr	equ	0x07
 scr_test_header_attr	equ	0x0F
-scr_test_header_xy:	equ	0x0302
+scr_test_header_xy:	equ	0x0502
 scr_test_header:	asciiz	"Pass "
 scr_test_separator:	asciiz	": "
 scr_label_march:	asciiz	"March-U "
@@ -160,6 +160,9 @@ scr_test_announce:
 	push	dx
 	push	ax
 	push	si
+	push	ds
+	push	cs
+	pop	ds
 
 	mov	ah, scr_test_normal_attr
 	call	scr_set_attr
@@ -184,6 +187,7 @@ scr_test_announce:
 	mov	ah, [ss:test_num]
 	call	scr_put_hex_ah
 
+	pop	ds
 	pop	si
 	pop	ax
 	pop 	dx
@@ -597,7 +601,8 @@ draw_screen:
 
 	mov	ah, scr_sep_attr
 	call	scr_set_attr
-	mov	dh, 2
+
+	mov	dh, 4
 	xor	dl, dl
 	call	scr_goto
 	mov	al, scr_sep_char

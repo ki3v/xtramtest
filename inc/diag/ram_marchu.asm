@@ -22,7 +22,7 @@ section .rwdata ; MARK: __ .rwdata __
 ; ---------------------------------------------------------------------------
 section .lib ; MARK: __ .lib __
 ; ---------------------------------------------------------------------------
-%define MARCHU_DELAY 8
+; %define MARCHU_DELAY 8
 
 %ifdef MARCHU_DELAY
 marchu_delay:

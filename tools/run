@@ -17,6 +17,9 @@ MOPTS="ibm5160 -isa1 $VIDEO -bios rev1 -ramsize $RAM"
 VOPTS="-window -resolution 1280x800 -nofilter -nokeepaspect"
 ROPTS="-skip_gameinfo -cheat -uimodekey END -nomouse -volume -20"
 DOPTS="-debugger_font 'JetBrains-Mono' -debugger_font_size 14 -update_in_pause"
+# LOPTS="-autoboot_script mamedebug.lua"
+COPTS="-debugscript xtramtest.debug"
 
 set -x
-mame $MOPTS -rompath ./roms $ROPTS $DOPTS $VOPTS -debugscript xtramtest.debug $*
+rm -f comments/ibm5160.cmt
+mame $MOPTS -rompath ./roms $ROPTS $DOPTS $VOPTS $COPTS $LOPTS $*

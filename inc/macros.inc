@@ -30,11 +30,11 @@
 
 
 ;=========================================================================
-%imacro section_save 0
+%imacro section_save 0.nolist
 	%push SECTION
 	%xdefine %$SECTION_OLD __?SECT?__
 %endmacro
-%imacro section_restore 0
+%imacro section_restore 0.nolist
 	%xdefine __?SECT?__ %$SECTION_OLD
 	%$SECTION_OLD
 	%pop SECTION

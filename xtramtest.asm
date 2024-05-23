@@ -77,17 +77,20 @@ section .romdata ; MARK: __ .romdata __
 ; 	; db ')', 0
 
 ; title_attr	equ	1Fh
-title_attr	equ	0Ah
+title_attr	equ	0Fh
 ; title_attr	equ	71h
-subtitle_attr	equ	02h
+subtitle_attr	equ	07h
+byline_attr	equ	02h
+
 title_text: ; attr, x, y, text, 0 (terminate with 0 for attr)
-			db 	title_attr,   1,  0
-	title_only:	db	"XTRAMTEST ", 
+			db 	title_attr,   1,  1
+		title_only:	db	"XTRAMTEST ", 0
+			db	subtitle_attr, 11, 1
 			%include "version.inc"
 			db " (", __DATE__, ")", 0
 			; db 0
-			db	title_attr,  54,  0, "github.com/ki3v/xtramtest", 0
-			db	subtitle_attr,  4,  1, "by Dave Giller - with Adrian Black - youtube.com/@adriansdigitalbasement", 0
+			db	title_attr,  54,  1, "github.com/ki3v/xtramtest", 0
+			db	byline_attr,  4,  3, "by Dave Giller - with Adrian Black - youtube.com/@adriansdigitalbasement", 0
 			db	0
 
 ; ---------------------------------------------------------------------------
@@ -146,15 +149,11 @@ DiagLoop:
 
 	add	word [ss:pass_count], 1		; Increment the pass count.
 
-	; Display 00 in the top right corner of the screen.
-	; mov	al,0
-	; call	DispAlTopCorner		; ( Destroys: BX, CL, DI )
-
-	__CHECKPOINT__ 0x12 ;++++++++++++++++++++++++++++++++++++++++
+	; __CHECKPOINT__ 0x12 ;++++++++++++++++++++++++++++++++++++++++
 	%include "screen.asm"
 
-	%include "diag/ram_marchu.asm"
 	%include "diag/ram_bitpat.asm"
+	%include "diag/ram_marchu.asm"
 
 	; %include "old/cpu_test.asm"
 	; %include "old/bios.asm"
@@ -175,35 +174,6 @@ DiagLoop:
 	; %include "old/fdc.asm"
 	; %include "old/roms.asm"
 	; %include "old/dipswitches.asm"
-
-
-
-
-; MARK: DispPassCount
-DispPassCount:
-; ****************************************************************************
-; 1. Display "Completed passes:" on-screen.
-; 2. To the right of that, display the count of completed passes.
-
-	; Display "Completed passes:"
-	; mov	si,TxtCompletedPasses
-	; call	TextToScreen
-
-	; Increment the varible containing the 'completed passes' count,
-	;    then return the count in decimal form within BL/DL/DH.
-	; mov	bx,PassCount
-	; call	IncGetStoredCount
-
-	; Set DI to the offset in MDA/CGA video RAM where the 'completed passes' count is displayed.
-	; mov	si,TxtCompletedPasses
-	; mov	di,18			; 18 chars from the start of "Completed passes:"
-	; call	CalcScreenOffset
-
-	; On-screen, display the count.
-	; In: BL = ones, DL = tens, DH = hundreds, DI = offset in MDA/CGA video RAM
-	; call	DispDecimal_2
-
-	__CHECKPOINT__ 0x74 ;++++++++++++++++++++++++++++++++++++++++
 
 	jmp	DiagLoop
 

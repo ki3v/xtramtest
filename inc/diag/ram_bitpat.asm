@@ -13,8 +13,8 @@
 ; ---------------------------------------------------------------------------
 section_save
 section .romdata ; MARK: __ .romdata __
-	bit_table	db	0x00, 0xFF, 0x55, 0xAA, 0x01
-	bit_table_len	equ	$-bit_table
+	; bit_table	db	0x55, 0xAA, 0xFF, 0x00, 0x01
+	; bit_table_len	equ	$-bit_table
 	; ram_col_header	db	"A  ErrM ErrB"
 
 
@@ -47,13 +47,13 @@ ram_test_bitpat:
 		mov	[ss:test_label], word scr_label_bit
 		mov	bp, bitpat_segment
 
-		mov 	al, 0x00
-		call	bitpat_one_test
-		mov	al, 0xFF
-		call	bitpat_one_test
 		mov	al, 0x55
 		call	bitpat_one_test
 		mov	al, 0xAA
+		call	bitpat_one_test
+		mov	al, 0xFF
+		call	bitpat_one_test
+		mov 	al, 0x00
 		call	bitpat_one_test
 		mov	al, 0x01
 		call	bitpat_one_test
@@ -68,9 +68,13 @@ bitpat_one_test:
 		ret
 
 bitpat_announce:
+		; push	ds
+		; push	cs
+		; pop	ds
 		mov	[ss:test_label], word scr_label_bit
 		call	scr_test_announce
 		add	[ss:test_num], word 1
+		; pop	ds
 		ret
 
 ; MARK: bitpat_count_up
@@ -79,6 +83,7 @@ bitpat_count_up:
 ; inputs:
 ;	bp = march test step function
 		push	dx		; save the number of segments to test
+		push	ds
 		cld			; clear the direction flag (go up)
 
 	.segment_loop:
@@ -91,6 +96,8 @@ bitpat_count_up:
 		jnz	.segment_loop	; if not, continue
 
 		sub	bx, cx		; restore the segment to the last one
+
+		pop	ds
 		pop	dx		; restore the number of segments to test
 		ret
 
@@ -99,21 +106,28 @@ _bitpat_count_common:
 		push	bp		; save the march test step function
 		mov	cx, si
 		mov	es, bx		; set the segment to test
+		mov	ds, bx
 
 		call	bitpat_startseg
 	.continue:
 		cmp	dh, 0xFF	; check if this segment is all errors (probably missing)
 		je	.nextseg	; if so, don't bother testing it again
 
-		push	ds		; save the data segment
-		push	es
-		pop	ds
+		; push	ds		; save the data segment
+		; push	es
+		; pop	ds
+		push	bx
+		push	cx
 		push	si
+		push	di
 		call	bp		; start or continue the specified step
+		pop	di
 		pop	si
-		pop	ds		; restore the data segment
+		pop	cx
+		pop	bx
+		; pop	ds		; restore the data segment
 
-		or	dh, ah		; accumulate errors in dh
+		; or	dh, ah		; accumulate errors in dh
 		; cmp	ah, 0		; check for errors
 		; jne	.continue	; if errors, continue testing at the continuation address
 					; else we are done with this segment, so go on to the next
@@ -197,45 +211,68 @@ bitpat_endseg:
 
 ; bitpat test components
 ; inputs:
-;	al = test value (possibly inverted for second half of march test)
-;	es = segment to test
+;	al = test value
+;	ds,es = segment to test
 ;	cx = number of bytes to test
 ; preserves:
-;	sp si bx
+;	sp bp
 ;	all segment registers
 ; state registers (saved between continuations):
 ;	al = test value (inverted at appropriate times)
 ;	cx = byte counter
 ;	es:di = current address under test
-;	bp = return address
 ; output:
 ;	dh = error bits (0 = no error)
 ;	es:di = address of the error
-;	bp = continuation address (for after errors)
-
-; MARK: marchu_w0
+;
+;
+; MARK: bitpat_segment
 bitpat_segment:	; w0
 		mov	ah, al		; save the test value into ah
+		xor	dh, dh		; clear the error bits
 
-		xor	di, di		; start at the beginning of the segment
-	.write:	rep 	stosb		; fill the range with the test value
+		xor	si, si		; start SI at the beginning of the segment
+		mov	di, cx		; start DI at the end of the segment
 
-		; xor	si, si
-		xor	di, di		; start at the beginning of the segment
-		mov	cx, si		; set the counter to the size of the segment
-	.read:	
-		mov	ah, [es:di]	; read the value back
-		xor	ah, al		; compare it to the test value
-		or	dh, ah		; accumulate errors
-		loop	.read
+	.loop:	dec	di		; back up DI to next lower value
+		mov	bx, ax		; make a copy of the test value to XOR against
+		mov	[si], al	; write the test value
+		movsb			; [es:di] := [ds:si], si++, di++
+		xor	bl, [si-1]	; read the value back
+		dec	di		; back up to written value
+		xor	bh, [di]	; read the value back
+		or	dh, bl		; accumulate errors
+		or	dh, bh		; accumulate errors
+		loop	.loop		; continue until the segment is done
 
-		; lodsb			; read the memory into al	
-		; xor	al, ah		; compare it to the test value
-		; or	dh, al		; accumulate errors
+		; mov	ah, al		; save the test value into ah
+	; 	xor	di, di		; start at the beginning of the segment
+	; .write:	rep 	stosb		; fill the range with the test value
+
+	; 	mov	cx, si		; set the counter to the size of the segment
+	; 	xor	si, si		; start at the beginning of the segment
+	; .read:	
+	; 	lodsb			; read the value back
+	; 	xor	al, ah		; compare it to the test value
+	; 	or	dh, al		; accumulate errors
+	; 	loop	.read		; continue until the segment is done
+	; 	xor	ah, ah		; clear the error bits to indicate we're done with this pass/value
+
+
+
+
+		; mov	ah, al		; save the test value into ah
+	; 	xor	di, di		; start at the beginning of the segment
+	; 	mov	cx, si		; set the counter to the size of the segment
+	; .read:	
+		; ; mov	ah, [es:di]	; read the value back
+		; mov	ah, [di]	; read the value back
+		; xor	ah, al		; compare it to the test value
+		; or	dh, ah		; accumulate errors
+		; inc	di		; increment the address
 		; loop	.read
-		; mov	al, ah		; restore the test value to al
+		; xor	ah, ah		; clear the error bits to indicate we're done with this pass/value
 
-		xor	ah, ah		; clear the error bits to indicate we're done with this pass/value
 		ret
 
 

@@ -7,13 +7,15 @@ BASE=`dirname $0`
 export BREAK=${BREAK:-marchu_1seg_nostack marchu_4k}
 export SECTS=".lib .text .resetvec .rodata"
 
-
+YELLOW="\033[33m"
+BOLD="\033[1m"
+RESET="\033[0m"
 
 VERSION=`git describe --tags --always --dirty=-local --broken=-XX 2>/dev/null || echo local_build`
 echo "db \"$VERSION\"" > version.inc
 
 # nasm -f dbg -iinc $F.asm -o $F.i -l $F.lst || exit -1
-nasm -iinc $F.asm -o $F.8k -l $F.lst -Lb || exit -1
+nasm -iinc $F.asm -o $F.8k -l $F.lst -Lm || exit -1
 $BASE/size $F.map
 $BASE/makerom $F.8k > $F.32k || exit -1
 
@@ -21,6 +23,8 @@ $BASE/makerom $F.8k > $F.32k || exit -1
 $BASE/make_debugscript $F.map > $F.debug || exit -1
 sha1sum $F.32k
 set +x
+echo
+echo -e "Version: $BOLD$YELLOW$VERSION$RESET"
 echo
 
 # code: language=bash tabSize=8

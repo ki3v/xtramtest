@@ -1,4 +1,5 @@
 ; code: language=nasm tabSize=8
+[list -]
 %ifndef DEFINES_INC
 %define DEFINES_INC
 
@@ -102,3 +103,4 @@ NmiFlag		equ	0404h		; Address = 0000:0404 - Normally 0. NMI handler will set thi
 InvScreenRAM	equ	4000			; Offset of unused portion of MDA/CGA video RAM
 
 %endif
+[list +]

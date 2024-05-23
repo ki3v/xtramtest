@@ -1,30 +1,216 @@
 #!/usr/bin/env perl
 use strict;
+use Data::Dumper;
+use Antsy qw(:all);
+
 my $break = join( "|", split( / /, $ENV{BREAK} ) );
-my $qrBreak = qr/$break/;
-my $sects = join( "|", split( / /, $ENV{SECTS} ) );
-my $qrSects = qr/$sects/;
+my $reBreak = qr/$break/;
+my $reNoScan = qr/data$/;
 
 my $scanning = 0;
 my $section;
 
+my $input = $ARGV[0];
+( my $list = $input ) =~ s/\.map$/.lst/i or die "couldn't determine list file name";
+( my $lsym = $input ) =~ s/\.map$/.lsym/i or die "couldn't determine list file name";
+# warn "input = $input, list = $list\n";
+
+my %COMMENTS;
+my %BREAKPOINTS;
+my %SYM;
+
+# read the header and identify the output file
 while (<>) {
 	m/^-- Symbols --/ and last;
+
+	if ( m/^---- Section (\S+) ----/ ) {
+		$section = $1;
+		$SYM{$section} = { name => $section };
+	}
+	# get attributes of the section
+	if ( m/^([a-zA-Z]+):\s*(.*)$/ ) {
+		my $key = $1;
+		my $val = $2;
+		if ( $val eq "not defined" ) {
+			$SYM{$section}{$key} = undef;
+		} elsif ( $key =~ m/^(length|start|align|vstart|valign)$/ ) {
+			$SYM{$section}{$key} = hex( $val );
+		} else {
+			$SYM{$section}{$key} = $val;
+		}
+		# $SYM{$section}{$1} = $2;
+	}
 }
 
+# gather the symbols
 while (<>) {
 	if ( m/^---- Section (\S+) ----/ ) {
 		$section = $1;
-		$scanning = $section =~ $qrSects;
 		next;
 	}
-	next unless $scanning;
 
-	unless ( m/\s+([0-9A-F]+)\s+(\1)\s+(\S+)\s*$/ ) { next; }
+	# match a symbol definition
+	next unless m/\s+([0-9A-F]+)\s+(?:\1)\s+(\S+)\s*$/;
 
-	print "comadd F$1, $section $3\n";
+	my $addr = $1;
+	my $sym = $2;
+	$SYM{$section}{syms}->{$sym} = { sym => $sym, addr => hex( $addr ) };
+}
 
-	if ( m/([0-9A-F]+)\s+($break)\s*$/ ) {
-		print "bps F$1\n";
+# print Dumper( \%SYM );
+
+# now output the directives
+for $section ( sort keys %SYM ) {
+	my @syms = sort { $a->{addr} cmp $b->{addr} } values $SYM{$section}{syms}->%*;
+
+	my $first = $syms[0]->{addr};
+
+	for my $sym ( @syms ) {
+		my $linear = $sym->{addr} + 0xF0000;
+		$COMMENTS{$linear} .= $sym->{sym} . ": ";
+		# printf "comadd %X, %s:\n", $linear, $sym->{sym};
+		if ( $sym->{sym} =~ m/^$reBreak$/ ) {
+			$BREAKPOINTS{$linear} = 1;
+			# printf "bps %X\n", $linear;
+		}
 	}
 }
+
+print "\n\n";
+
+# now process the list file to comment on jumps and calls
+
+open( my $fh, "<", $list ) or die "couldn't open $list: $!";
+
+my %POS = map { $_ => 0 } keys %SYM;
+
+my $H = qr/[0-9a-fA-F]/;
+my $reAddr = qr/[0-9a-fA-F]{8}/;
+my $reText = qr/[0-9a-fA-F\[\]\(\)]+|\?+/;
+# my $reIdent = qr/[a-zA-Z_.][a-zA-Z0-9_.]*/;
+my $reIdent = qr/[a-zA-Z._\@\$][a-zA-Z0-9._\@\$]*/;
+
+# my $reLine = qr/^(?<output>\s*(?<lnum>\d+)\s+(?:(?<addr>$reAddr))\s+(?<text>$reText)(?<continue>-)?)?\s+(?<level><\d+>)?\s*(?<label>$reIdent:)\s*(?<code>.*)$/x;
+my $reLine = qr/^
+	(?<output>
+		\s*
+		(?<lnum>\d+)\s+
+		(?:
+			(?<addr>$reAddr)\s+
+			(?<bin>$reText)
+			(?<continue>-)?
+		)?
+	)\s*
+	(?<level><\d+>)?\s*
+	((?<label>$reIdent):\s*)?
+	(?<source>.*)
+$/x;
+
+my %dc = (
+	lnum => reset,
+	addr => text_white,
+	bin => bold . text_green,
+	level => text_yellow,
+	label => bold . text_cyan,
+	source => text_white,
+);
+
+
+sub dumpline {
+	my %l = shift->%*;
+	my $s = "";
+
+	for my $k ( qw( lnum addr bin level label source ) ) {
+		$s .= $dc{$k} . "$k:$l{$k}" . reset . " " if defined $l{$k} and $l{$k} ne "";
+	}
+
+	warn "  $s\n";
+}
+
+my @SECTS = ( $SYM{".text"} );
+sub cur_sect () { $SECTS[$#SECTS] } 
+sub save_sect () { push @SECTS, cur_sect }
+sub restore_sect () { pop @SECTS }
+sub set_sect ($) { $SECTS[$#SECTS] = $SYM{$_[0]} }
+
+sub cur_pos () { $SECTS[$#SECTS]->{pos} }
+sub set_pos ($) { $SECTS[$#SECTS]->{pos} = $_[0] }
+
+sub section_summary {
+	my $kw = shift // die;
+	my $s = shift // cur_sect;
+	my $a1 = shift // bold . text_white . underline;
+	my $a2 = shift // text_magenta;
+	return sprintf "%s%s%s %s%s start=%X pos=%X%s  ( %s )\n", $a1, $kw, reset, $a2, $s->{name}, $s->{start}, $s->{pos}, reset, join( " ", map { $_->{name} } @SECTS );
+}
+
+my $reRelocInsn = qr/^(?:call|jmp|j\w+)\b/;
+
+while (<$fh>) {
+	chomp;
+	if ( m/$reLine/ ) {
+		my %l = %+;
+		$l{source} =~ s/;.*$//;	# strip comments
+		$l{source} =~ s/^\s+//;	# strip leading whitespace
+		$l{source} =~ s/\s+$//;	# strip trailing whitespace
+		$l{source} =~ s/\s+/ /;	# compress whitespace
+		# warn text_white, $_, reset, "\n";
+
+		if ( $l{source} =~ m/^section_save\b/ ) {
+			die "can't understand line $_" if $l{label};
+			save_sect;
+			# warn section_summary( "section_save" );
+		} elsif ( $l{source} =~ m/^section_restore\b/ ) {
+			die "can't understand line $_" if $l{label};
+			restore_sect;
+			# warn section_summary( "section_restore" );
+		} elsif ( $l{source} =~ m/^section\s+($reIdent)/ ) {
+			die "can't understand line $_" if $l{label};
+			set_sect $1;
+			cur_sect->{pos} //= cur_sect->{start};
+			# warn section_summary( "section" );
+		} elsif ( $l{label} ) {
+			# XXX double-check that we are calculating the right address?
+		}
+
+		my $emitted = ( defined $l{addr} and $l{addr} ne '' );
+
+		if ( $emitted ) {
+			set_pos hex( $l{addr} ) + cur_sect->{start};
+			my $pos = cur_pos + 0xF0000;
+			# warn sprintf "%-9.9s %05X %s\n", cur_sect->{name}, $pos, $l{source};
+
+			if ( $l{source} !~ m/^\s*$/ ) {
+				unless ( $COMMENTS{$pos} ) {
+					$COMMENTS{$pos} = "    ";
+				}
+				$COMMENTS{$pos} .= $l{source};
+			}
+		}
+
+	} else {
+		warn text_red, "$_", reset, "\n";
+	}
+}
+
+# warn Dumper( \%COMMENTS );
+
+for my $addr ( sort keys %COMMENTS ) {
+	printf "comadd %X, \"%s\"\n", $addr, $COMMENTS{$addr};
+}
+for my $addr ( sort keys %BREAKPOINTS ) {
+	printf "bps %X\n", $addr;
+}
+
+
+# open my $lsymfh, ">", $lsym or die "couldn't open $lsym: $!";
+
+# for $section ( sort keys %SYM ) {
+# 	my @syms = sort { $a->{addr} cmp $b->{addr} } values $SYM{$section}{syms}->%*;
+# 	my $first = $syms[0]->{addr};
+
+# 	for my $sym ( @syms ) {
+# 		my $linear = $sym->{addr} + 0xF0000;
+# 		print 
+# 	}
+# }
