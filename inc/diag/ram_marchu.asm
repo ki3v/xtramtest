@@ -126,6 +126,7 @@ marchu:
 
 		ret
 
+; MARK: marchu_announce
 marchu_announce:
 	%ifdef MARCHU_DELAY
 		cmp	[ss:test_num], byte 0
@@ -186,6 +187,7 @@ _marchu_count_common:
 		push	bp		; save the march test step function
 		mov	cx, si
 		mov	es, bx		; set the segment to test
+		mov	ds, bx
 
 		call	marchu_startseg
 	.continue:
@@ -193,7 +195,17 @@ _marchu_count_common:
 		je	.nextseg	; if so, don't bother testing it again
 		xor	ah, ah		; clear the error bits for the restart
 
+		push	bx
+		push	cx
+		push	si
+		push	di
+
 		call	bp		; start or continue the specified step
+
+		pop	di
+		pop	si
+		pop	cx
+		pop	bx
 
 		or	dh, ah		; accumulate errors in dh
 		cmp	ah, 0		; check for errors
@@ -318,14 +330,19 @@ marchu_r0w1r1w0:	; r0,w1,r1,w0
 		not	al		; now ORIGINAL
 		stosb			; write the test value [w0], inc di
 		loop	.loop		; repeat for the next byte
-		ret			; step done
 
+		xor	bp, bp		; indicate finshed (no continuation)
+	.done	or	dh, ah		; accumulate errors
+		ret			; segment done
+
+	; use these stubs for the error conditions
+	; this speeds up the loop - not taking the conditional jump saves several cycles per iteration
 	.b.cont:
-		mov	bp, .b		; next step
-		ret
+		mov	bp, .b		; set continuation address
+		jmp	.done		; save a few bytes
 	.d.cont:
-		mov	bp, .d		; next step
-		ret
+		mov	bp, .d		; set continuation address
+		jmp	.done		; save a few bytes
 
 ; MARK: marchu_r0w1
 marchu_r0w1:	; r0,w1
@@ -338,11 +355,16 @@ marchu_r0w1:	; r0,w1
 		stosb			; write the test value [w1], inc di
 		not	al		; now ORIGINAL
 		loop	.loop	; repeat for the next byte
-		ret			; step done
 
+		xor	bp, bp		; indicate finshed (no continuation)
+	.done	or	dh, ah		; accumulate errors
+		ret			; segment done
+
+	; use these stubs for the error conditions
+	; this speeds up the loop - not taking the conditional jump saves several cycles per iteration
 	.b.cont:
-		mov	bp, .b		; next step
-		ret
+		mov	bp, .b		; set continuation address
+		jmp	.done		; save a few bytes
 
 ; ---------------------------------------------------------------------------
 section_restore ; MARK: __ restore __
@@ -356,6 +378,8 @@ test_dram:
 ;	bx = start segment
 ; 	dl = number of segments to test (will test dl*si bytes total)
 ; 	si = size of segment to test (must be a multiple of 16)
+		mov	byte [ss:test_offset], 0	; set the column offset for the test
+
 		xor	al, al
 		xor	bx, bx
 		mov	dl, num_segments

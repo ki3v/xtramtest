@@ -152,8 +152,8 @@ DiagLoop:
 	; __CHECKPOINT__ 0x12 ;++++++++++++++++++++++++++++++++++++++++
 	%include "screen.asm"
 
-	%include "diag/ram_bitpat.asm"
 	%include "diag/ram_marchu.asm"
+	%include "diag/ram_bitpat.asm"
 
 	; %include "old/cpu_test.asm"
 	; %include "old/bios.asm"

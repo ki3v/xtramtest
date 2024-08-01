@@ -16,6 +16,8 @@ section .rwdata ; MARK: __ .rwdata __
 	test_label	dw	?	; test label
 	test_num	db	?	; test number
 
+	test_offset	db	?	; test x offset on screen (how many columns to the right)
+
 ; ---------------------------------------------------------------------------
 section .romdata ; MARK: __ .romdata __
 ; ---------------------------------------------------------------------------
@@ -66,8 +68,7 @@ scr_arrow_attr		equ	0x0A
 section .lib ; MARK: __ .lib __
 ; ---------------------------------------------------------------------------
 
-; MARK: scr_get_hex
-scr_get_hex:
+scr_get_hex: ; MARK: scr_get_hex
 ; get the byte value of two hex digits from the screen
 ; inputs:
 ;	es:di = address of the hex digits
@@ -154,9 +155,6 @@ scr_fill_line:
 
 ; MARK: scr_test_announce
 scr_test_announce:
-; input:
-;	ds:si = test label
-;	ah = test number
 	push	dx
 	push	ax
 	push	si
@@ -521,6 +519,7 @@ scr_goto_seg:
 	shr	dl, 1
 	; shr	dl, 1
 	add	dl, x_grid_start	; add the base x position
+	add	dl, [ss:test_offset]	; move over to the current test
 
 	call	scr_goto
 	pop	dx
