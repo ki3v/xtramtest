@@ -67,146 +67,10 @@ bitpat_one_test:
 		mov	[ss:test_num], al
 		xor	bx, bx
 		call	scr_test_announce
-		call	bitpat_count_up
+		call	ram_test_upwards
 		ret
 
-bitpat_announce:
-		; push	ds
-		; push	cs
-		; pop	ds
-		mov	[ss:test_label], word scr_label_bit
-		call	scr_test_announce
-		add	[ss:test_num], word 1
-		; pop	ds
-		ret
 
-; MARK: bitpat_count_up
-bitpat_count_up:
-; run the march test in bp (including continuations on error) over the specified segments
-; inputs:
-;	bp = march test step function
-		push	dx		; save the number of segments to test
-		cld			; clear the direction flag (go up)
-
-	.segment_loop:
-		xor	di, di		; start at the beginning of the segment
-
-		call	_bitpat_count_common
-
-		add	bx, cx		; increment the segment based on the size of the test
-		dec	dl		; decrement the number of segments to test
-		jnz	.segment_loop	; if not, continue
-
-		sub	bx, cx		; restore the segment to the last one
-
-		pop	dx		; restore the number of segments to test
-		ret
-
-; MARK: _bitpat_count_common
-_bitpat_count_common:
-		push	bp		; save the march test step function
-		mov	cx, si
-		mov	es, bx		; set the segment to test
-		mov	ds, bx
-
-		call	bitpat_startseg
-	.continue:
-		cmp	dh, 0xFF	; check if this segment is all errors (probably missing)
-		je	.nextseg	; if so, don't bother testing it again
-
-		push	bx
-		push	cx
-		push	si
-		push	di
-
-		call	bp		; start or continue the specified step
-
-		pop	di
-		pop	si
-		pop	cx
-		pop	bx
-
-		cmp	bp, 0		; check for done with the segment
-		jne	.continue	; if not, continue testing
-
-		; or	dh, ah		; accumulate errors in dh
-		; cmp	ah, 0		; check for errors
-		; jne	.continue	; if errors, continue testing at the continuation address
-					; else we are done with this segment, so go on to the next
-
-	.nextseg:
-		pop	bp		; restore the march test step function
-		call	bitpat_endseg
-
-		mov	cx, si		; calculate next segment
-		shr	cx, 1		; divide by 16
-		shr	cx, 1
-		shr	cx, 1
-		shr	cx, 1
-
-		ret
-
-; MARK: bitpat_startseg
-bitpat_startseg:
-		; XXX - show on the screen that we are starting this segment
-		push	ax
-
-		mov	ax, es
-		mov	al, ah
-		call	scr_goto_seg
-
-		; add	[ss:scrPos], word 8
-		mov	[ss:scrAttr], byte scr_arrow_attr
-		mov	al, 10h
-		call	scr_putc
-
-		call	scr_get_hex	; get the byte value of the hex digits at that screen location
-		mov	dh, ah		; save the error bits
-
-		add	[ss:scrPos], word 4
-		mov	al, 11h
-		call	scr_putc
-
-		pop	ax
-		xor	ah, ah		; clear the error bits for the next test
-		ret
-
-; MARK: bitpat_endseg
-bitpat_endseg:
-		; XXX - show on the screen that we have finished this segment
-		push	ax
-
-		mov	ax, es
-		mov	al, ah
-		call	scr_goto_seg	; position the cursor for the report for this segment
-
-		; add	[ss:scrPos], word 8
-		; mov	[ss:scrAttr], byte 0x08		; dark grey on black
-		mov	[ss:scrAttr], byte scr_arrow_attr
-		mov	al, " "
-		call	scr_putc
-
-		or	dh, dh		; any errors?
-		jz	.ok
-
-	.err:	
-		; mov	[ss:scrAttr], byte 0x4F
-		mov	[ss:scrAttr], byte scr_err_attr
-		mov	ah, dh
-		call	scr_put_hex_ah	; print the error bits
-		jmp 	.done
-
-	.ok:	mov	[ss:scrAttr], byte scr_ok_attr
-		mov	al, '-'
-		call	scr_putc
-		call	scr_putc
-
-	.done:	mov	[ss:scrAttr], byte scr_arrow_attr
-		mov	al, " "
-		call	scr_putc
-		
-		pop	ax
-		ret
 
 
 ; bitpat test components
@@ -308,7 +172,8 @@ test_bitpat:
 ; 	dl = number of segments to test (will test dl*si bytes total)
 ; 	si = size of segment to test (must be a multiple of 16)
 		mov	byte [ss:test_offset], 4	; set the column offset for the test
-		xor	al, al
+		; xor	al, al
+		mov	al, 0xFF
 		xor	bx, bx
 		mov	dl, num_segments
 		mov	si, 0x4000

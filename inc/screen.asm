@@ -54,7 +54,7 @@ scr_test_header_xy:	equ	0x0502
 scr_test_header:	asciiz	"Pass "
 scr_test_separator:	asciiz	": "
 scr_label_march:	asciiz	"March-U "
-scr_label_bit:		asciiz	"Bit Pattern "
+scr_label_bit:		asciiz	"Bus Exercise "
 
 scr_sep_line		equ	2
 scr_sep_char		equ	0xC4
@@ -183,7 +183,11 @@ scr_test_announce:
 	mov	si, [ss:test_label]
 	call	scr_puts
 	mov	ah, [ss:test_num]
+
+	cmp	ah, 0xFF		; skip if we've indicated not to print this number
+	je	.skip
 	call	scr_put_hex_ah
+.skip:
 
 	pop	ds
 	pop	si
