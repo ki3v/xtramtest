@@ -32,7 +32,7 @@ This ROM currently only works with IBM MDA (and compatible) cards and IBM CGA (a
 
 ### IBM PC 5150
 
-This machine uses 2364 mask ROMs. These sockets are not compatible with 2764/2864 chips and you must use an adapter. Use an adapter that goes from 2764/2864 to the 2364 and use the `xtramtest.8k` binary available under Releases. See this link: 
+This machine uses 2364 mask ROMs. These sockets are not compatible with 2764/2864 chips and you must use an adapter. Use an adapter that goes from 2764/2864 to the 2364 and use the `xtramtest.8k` binary available under Releases. See this link:
 
 [IBM 5150 motherboard  -  Use of '2364 Adapter'](https://minuszerodegrees.net/5150/motherboard/IBM%205150%20motherboard%20-%20Use%20of%202364%20adapter.htm)
 
@@ -65,7 +65,7 @@ As part of the IBM BIOS image file preparation, a specific checksum is calculate
 
 Build instructions will be forthcoming, but look in the `tools` directory for the scripts used to build the binaries and test under MAME emulation.
 
-## Acknowledgements and dedication:
+## Acknowledgements and dedication
 
 - This ROM was made possible by starting with [Ruud's Diagnostic ROM](https://www.minuszerodegrees.net/ruuds_diagnostic_rom/clones/clones.htm), by Ruud Baltissen and modem7, at minuszerodegrees.net.  As seen above, we also rely extensivly on their well-researched documentation.
 
