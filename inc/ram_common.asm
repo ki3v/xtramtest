@@ -47,7 +47,7 @@ ram_test_upwards:
 	.segment_loop:
 		xor	di, di		; start at the beginning of the segment
 
-		call	ram_test_loop
+		call	ram_test_segment
 
 		add	bx, cx		; increment the segment based on the size of the test
 		dec	dl		; decrement the number of segments to test
@@ -70,7 +70,7 @@ ram_test_downwards:
 		mov	di, si		; start at the end of the segment
 		dec	di		; adjust for the last byte
 
-		call	ram_test_loop
+		call	ram_test_segment
 
 		sub	bx, cx		; increment the segment based on the size of the test
 		dec	dl		; decrement the number of segments to test
@@ -81,8 +81,8 @@ ram_test_downwards:
 		ret
 
 
-; MARK: ram_test_loop
-ram_test_loop:
+; MARK: ram_test_segment
+ram_test_segment:
 		push	bp		; save the march test step function
 		mov	cx, si
 		mov	es, bx		; set the segment to test
