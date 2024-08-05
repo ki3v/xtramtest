@@ -20,7 +20,9 @@ section .rwdata		start=InvScreenRAM align=1 nobits
 rwdata_start:
 
 ; %define num_segments 8
+%define first_segment 0
 %define num_segments 40
+%define bytes_per_segment 0x4000
 
 ; ---------------------------------------------------------------------------
 section .rwdata ; MARK: __ .rwdata __
@@ -48,7 +50,7 @@ title_text: ; attr, x, y, text, 0 (terminate with 0 for attr)
 			db " (", __DATE__, ")", 0
 			; db 0
 			db	title_attr,  54,  1, "github.com/ki3v/xtramtest", 0
-			db	byline_attr,  4,  3, "by Dave Giller - with Adrian Black - youtube.com/@adriansdigitalbasement", 0
+			db	byline_attr,  0,  3, "by Dave Giller - with Adrian Black - https://YouYube.com/@AdriansDigitalBasement", 0
 			db	0
 
 ; ---------------------------------------------------------------------------

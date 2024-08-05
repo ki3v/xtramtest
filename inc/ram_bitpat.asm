@@ -121,17 +121,34 @@ bitpat_segment:	; w0
 		ret			; done
 
 
-	; .loop:	dec	di		; decrement DI to next lower value
-	; 	mov	bx, ax		; make a copy of the test value to XOR against
-	; 	mov	[si], al	; write the test value (write)
-	; 	movsb			; [es:di] := [ds:si], si++, di++ (read, write)
-	; 	xor	bl, [si-1]	; read the first value back (read)
+	; .loop2:	cmp	dh, 0xFF	; check for all bits in error
+	; 	je	.end		; if so, give up on this segment
+	; 	dec	di		; decrement DI to next lower value
+	; 	mov	ah, al		; copy the test value into ah
+	; 	mov	[si], al	; write [es:si] with original test value 
+	; 	mov	[di], al	; write [es:di] with original test value (invert address lines)
+	; 	not	[si], 0xFF	; invert [es:si] (invert address and data lines)
+	; 	movsb			; copy [es:di] := [ds:si], si++, di++ (read, write)
 	; 	dec	di		; rewind to just-written value
-	; 	xor	bh, [di]	; read the second value back (read)
-	; 	or	dh, bl		; accumulate errors
-	; 	or	dh, bh		; accumulate errors
+	; 	xor	ah, [di]	; read the final inverted value back and compare it to the test value
+	; 	not	ah		; invert the value (back to original)
+	; 	xor	ah, al		; compare the final value to the test value
+	; 	or	dh, ah		; accumulate errors
 	; 	loop	.loop		; continue until the segment is done
-	; 	ret
+
+	; .loop3:	cmp	dh, 0xFF	; check for all bits in error
+	; 	je	.end		; if so, give up on this segment
+	; 	dec	di		; decrement DI to next lower value
+	; 	mov	ah, al		; copy the test value into ah
+	; 	mov	[si], al	; write [es:si] with original test value 
+	; 	mov	[di], al	; write [es:di] with original test value (invert address lines)
+	; 	not	[si]		; invert [es:si] (invert address and data lines)
+	; 	movsb			; copy [es:di] := [ds:si], si++, di++ (read, write)
+	; 	dec	di		; rewind to just-written value
+	; 	not	[di]		; invert [es:di], should now be the original test value
+	; 	xor	ah, [di]	; read the final inverted value back and compare it to the test value
+	; 	or	dh, ah		; accumulate errors
+	; 	loop	.loop		; continue until the segment is done
 
 bitpat_segment_all:
 		xchg	bp, sp
@@ -173,10 +190,10 @@ test_bitpat:
 ; 	si = size of segment to test (must be a multiple of 16)
 		mov	byte [ss:test_offset], 4	; set the column offset for the test
 		; xor	al, al
-		mov	al, 0xFF
-		xor	bx, bx
-		mov	dl, num_segments
-		mov	si, 0x4000
+		mov	al, 0xFF			; don't print a test value (code FF)
+		; mov	bx, first_segment
+		; mov	dl, num_segments
+		; mov	si, bytes_per_segment
 		call	ram_test_bitpat
 
 	; .hlt:	hlt

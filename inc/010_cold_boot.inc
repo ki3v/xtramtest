@@ -56,38 +56,3 @@ cold_boot:
 	mov	dx, 213h			; Expansion unit port
 	inc	ax				;   enable it
 	out	dx, al				;   do the enable
-	; mov	ax, 40h 			; Get BIOS data area segment
-	; mov	ds, ax				;   into ds register
-	; mov	si, [ds:72h]			; Save reset flag in si reg
-	; xor	ax, ax				;   cause memory check
-	; mov	bp, ax				;   will clobber the flag
-	; mov	bx, ax				; Start at segment 0000h
-	; mov	dx, 55AAh			;   get pattern
-	; cld					; Strings auto-increment
-
-
-	; 	cli			; disable IRQs
-
-	; 	mov	al, 1		; send a 1 to any POST card present to show we're running
-	; 	out	0x80, al
-
-	; .mask_nmi:
-	; 	xor	al, al		; mask NMIs using the NMI control port in case the MB didn't
-	; 	out	PORT_NMI_MASK, al
-
-	; .set_segregs:
-	; 	cld			; default direction is forward
-
-	; 	mov	ax, cs		; copy CS
-	; 	mov	ds, ax		; to DS
-	; 	mov	ss, ax		; and SS
-
-	; .init_8255P:	; Initialise the 8255 PPI chip.
-	; 	mov	al,99h
-	; 	out	PPI8255_ctrl, al	; Set port B to outputs, and ports A and C to inputs.
-
-	; 	mov	al,0F8h
-	; 	out	PPI8255_B,al		; 1. Reset/clear the two 'RAM parity error' latches.
-	; 					; 2. Turns off turbo mode if the clone XT motherboard supports 
-	; 					;    turbo control via bit 2.
-

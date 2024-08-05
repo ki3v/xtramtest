@@ -15,7 +15,8 @@ VERSION=`git describe --tags --always --dirty=-local --broken=-XX 2>/dev/null ||
 echo "db \"$VERSION\"" > version.inc
 
 # nasm -f dbg -iinc $F.asm -o $F.i -l $F.lst || exit -1
-nasm -iinc $F.asm -o $F.8k -l $F.lst -Lm || exit -1
+# nasm -MG -MP -MF $F.dep -iinc $F.asm || exit -1
+nasm -o $F.8k -iinc $F.asm -l $F.lst -Lm || exit -1
 $BASE/size $F.map
 $BASE/makerom $F.8k > $F.32k || exit -1
 

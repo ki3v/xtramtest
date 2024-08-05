@@ -1,17 +1,23 @@
 ; code: language=nasm tabSize=8
 %include "defines.inc"
 
+seg_start	equ	0
+
 ; ---------------------------------------------------------------------------
 section_save
+; ---------------------------------------------------------------------------
+section .rwdata ; MARK: __ .rwdata __
+; ---------------------------------------------------------------------------
+
+
 
 ; ---------------------------------------------------------------------------
 section .lib ; MARK: __ .lib __
 ; ---------------------------------------------------------------------------
 
+; %define SIMULATE_ERRORS
 
-%define SIMULATE_ERRORS 1
-
-%if SIMULATE_ERRORS
+%ifdef SIMULATE_ERRORS
 	%define simulate_errors call _do_sim_errors
 
 	%macro _sim_error 1-3 0,1
@@ -26,7 +32,7 @@ _do_sim_errors:
 		
 		; _sim_error 0x0C00, 0, 2
 		; _sim_error 0x1000, 0, 0xFE
-		_sim_error 0x5000, 0, 0xFF
+		_sim_error 0x0000, 1, 0x80
 
 		pop	es
 		pop	ax
@@ -41,19 +47,38 @@ ram_test_upwards:
 ; run the march test in bp (including continuations on error) over the specified segments
 ; inputs:
 ;	bp = march test step function
+;	bx = start segment
+; 	dl = number of segments to test (will test dl*si bytes total)
+; 	si = size of segment to test
+; state variables:
+;	bx = segment under test
+;	dh = scratch holding error bits (0 = no error)
+;	cx = counter of bytes and segments
+; outputs:
+;	dh = error bits
+
+
 		push	dx		; save the number of segments to test
 		cld			; clear the direction flag (go up)
 
+		mov	bx, first_segment
+		mov	dl, num_segments
+
+		; xor	bx, bx		; start at the first segment
+
 	.segment_loop:
+		mov	si, bytes_per_segment
 		xor	di, di		; start at the beginning of the segment
 
 		call	ram_test_segment
 
-		add	bx, cx		; increment the segment based on the size of the test
+		; add	bx, cx		; increment the segment based on the size of the test
+		add	bx, bytes_per_segment/16		; increment the segment based on the size of the test
 		dec	dl		; decrement the number of segments to test
 		jnz	.segment_loop	; if not, continue
 
-		sub	bx, cx		; restore the segment to the last one
+		; sub	bx, cx		; restore the segment to the last one
+		sub	bx, bytes_per_segment/16		; restore the segment to the last one
 		pop	dx		; restore the number of segments to test
 		ret
 
@@ -66,58 +91,66 @@ ram_test_downwards:
 		push	dx		; save the number of segments to test
 		std			; set the direction flag (go down)
 
+		mov	bx, (num_segments-1)*(bytes_per_segment/16)		; start at last segment
+		mov	dl, num_segments
+
 	.segment_loop:
+		mov	si, bytes_per_segment
 		mov	di, si		; start at the end of the segment
 		dec	di		; adjust for the last byte
 
 		call	ram_test_segment
 
-		sub	bx, cx		; increment the segment based on the size of the test
+		; sub	bx, cx		; increment the segment based on the size of the test
+		sub	bx, bytes_per_segment/16		; increment the segment based on the size of the test
 		dec	dl		; decrement the number of segments to test
 		jnz	.segment_loop	; if not, continue
 
-		add	bx, cx		; restore the segment to the last one
+		; add	bx, cx		; restore the segment to the last one
+		add	bx, bytes_per_segment/16		; restore the segment to the last one
 		pop	dx		; restore the number of segments to test
 		ret
 
 
 ; MARK: ram_test_segment
 ram_test_segment:
-		push	bp		; save the march test step function
+		push	bp		; save the test step function
 		mov	cx, si
 		mov	es, bx		; set the segment to test
 		mov	ds, bx
 
 		call	startseg
+
+		
 	.continue:
 		cmp	dh, 0xFF	; check if this segment is all errors (probably missing)
 		je	.nextseg	; if so, don't bother testing it again
 		xor	ah, ah		; clear the error bits for the restart
 
-		push	bx
-		push	cx
-		push	si
-		push	di
+		; push	bx
+		; push	cx
+		; push	si
+		; push	di
 
 		call	bp		; start or continue the specified step
 
-		pop	di
-		pop	si
-		pop	cx
-		pop	bx
+		; pop	di
+		; pop	si
+		; pop	cx
+		; pop	bx
 
 		cmp	bp, 0		; check for done with the segment
 		jne	.continue	; if not, continue testing
 
 	.nextseg:
-		pop	bp		; restore the march test step function
+		pop	bp		; restore the test step function
 		call	endseg
 
-		mov	cx, si		; calculate next segment
-		shr	cx, 1		; divide by 16
-		shr	cx, 1
-		shr	cx, 1
-		shr	cx, 1
+		; mov	cx, si		; calculate next segment
+		; shr	cx, 1		; divide by 16
+		; shr	cx, 1
+		; shr	cx, 1
+		; shr	cx, 1
 
 		ret
 
