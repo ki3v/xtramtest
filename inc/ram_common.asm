@@ -57,14 +57,11 @@ ram_test_upwards:
 ; outputs:
 ;	dh = error bits
 
-
 		push	dx		; save the number of segments to test
 		cld			; clear the direction flag (go up)
 
 		mov	bx, first_segment
 		mov	dl, num_segments
-
-		; xor	bx, bx		; start at the first segment
 
 	.segment_loop:
 		mov	si, bytes_per_segment
@@ -72,12 +69,10 @@ ram_test_upwards:
 
 		call	ram_test_segment
 
-		; add	bx, cx		; increment the segment based on the size of the test
 		add	bx, bytes_per_segment/16		; increment the segment based on the size of the test
 		dec	dl		; decrement the number of segments to test
 		jnz	.segment_loop	; if not, continue
 
-		; sub	bx, cx		; restore the segment to the last one
 		sub	bx, bytes_per_segment/16		; restore the segment to the last one
 		pop	dx		; restore the number of segments to test
 		ret
@@ -86,8 +81,7 @@ ram_test_upwards:
 ; MARK: ram_test_downwards
 ram_test_downwards:
 ; run the march test in bp (including continuations on error) over the specified segments
-; inputs:
-;	bp = march test step function
+
 		push	dx		; save the number of segments to test
 		std			; set the direction flag (go down)
 
@@ -101,12 +95,10 @@ ram_test_downwards:
 
 		call	ram_test_segment
 
-		; sub	bx, cx		; increment the segment based on the size of the test
 		sub	bx, bytes_per_segment/16		; increment the segment based on the size of the test
 		dec	dl		; decrement the number of segments to test
 		jnz	.segment_loop	; if not, continue
 
-		; add	bx, cx		; restore the segment to the last one
 		add	bx, bytes_per_segment/16		; restore the segment to the last one
 		pop	dx		; restore the number of segments to test
 		ret
@@ -121,23 +113,12 @@ ram_test_segment:
 
 		call	startseg
 
-		
 	.continue:
 		cmp	dh, 0xFF	; check if this segment is all errors (probably missing)
 		je	.nextseg	; if so, don't bother testing it again
 		xor	ah, ah		; clear the error bits for the restart
 
-		; push	bx
-		; push	cx
-		; push	si
-		; push	di
-
 		call	bp		; start or continue the specified step
-
-		; pop	di
-		; pop	si
-		; pop	cx
-		; pop	bx
 
 		cmp	bp, 0		; check for done with the segment
 		jne	.continue	; if not, continue testing
@@ -145,13 +126,6 @@ ram_test_segment:
 	.nextseg:
 		pop	bp		; restore the test step function
 		call	endseg
-
-		; mov	cx, si		; calculate next segment
-		; shr	cx, 1		; divide by 16
-		; shr	cx, 1
-		; shr	cx, 1
-		; shr	cx, 1
-
 		ret
 
 

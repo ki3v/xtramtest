@@ -155,11 +155,12 @@ scr_fill_line:
 
 ; MARK: scr_test_announce
 scr_test_announce:
-	push	dx
 	push	ax
+	push	dx
 	push	si
 	push	ds
-	push	cs
+
+	push	cs			; we get strings from the ROM in CS
 	pop	ds
 
 	mov	ah, scr_test_normal_attr
@@ -184,15 +185,14 @@ scr_test_announce:
 	call	scr_puts
 	mov	ah, [ss:test_num]
 
-	cmp	ah, 0xFF		; skip if we've indicated not to print this number
-	je	.skip
+	; cmp	ah, 0xFF		; skip if we've indicated not to print this number
+	; je	.skip
 	call	scr_put_hex_ah
 .skip:
-
 	pop	ds
 	pop	si
-	pop	ax
 	pop 	dx
+	pop	ax
 	ret
 
 ; MARK: scr_puts_labels
@@ -203,6 +203,10 @@ scr_puts_labels:
 	mov	al, [ss:scrAttr]
 	push	ax
 	push	di
+
+	push	cs
+	pop	ds
+
 
 .loop:	lodsb				; fetch the attribute
 	cmp	al, 0			; check for last string
@@ -590,6 +594,8 @@ section_restore ; MARK: __ restore __
 ; ---------------------------------------------------------------------------
 
 draw_screen:
+	mov 	[ss:test_offset], byte 0
+
 	xor	dx, dx
 	call	scr_goto
 	mov	ah, title_attr

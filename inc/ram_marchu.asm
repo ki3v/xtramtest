@@ -63,24 +63,19 @@ marchu:
 ;	dh = running error bits for current segment
 ;	es:di = address of the error
 
-		mov	al, 0
-		; push	bx		; save the start segment overall
-		; push	bx		; save the start segment
+		xor	al, al			; test value for march is always 0
 
 		mov	[ss:test_num], byte 0
 		call	marchu_announce
 
 	.s0:	mov	bp, marchu_w0
 		call	ram_test_upwards
-		; pop	bx		; restore the start segment
 
 		simulate_errors
 
 		call	marchu_announce
-		; push	bx		; save the start segment
 	.s1:	mov	bp, marchu_r0w1r1w0
 		call	ram_test_upwards
-		; pop	bx		; restore the start segment
 
 		simulate_errors
 
@@ -92,17 +87,14 @@ marchu:
 		simulate_errors
 
 		call	marchu_announce
-		; push	bx		; save the start segment
 	.s3:	mov	bp, marchu_r0w1r1w0
 		call	ram_test_downwards
-		; pop	bx		; restore the start segment
 
 		simulate_errors
 
 		call	marchu_announce
 	.s4:	mov	bp, marchu_r0w1
 		call	ram_test_downwards
-		; pop	bx		; restore the start segment overall
 
 		ret
 
@@ -146,7 +138,7 @@ marchu_announce:
 marchu_w0:	; w0
 		rep 	stosb		; fill the range with the test value
 		; xor	ah, ah		; no errors possible
-		xor	dh, dh		; clear the error bits
+		; xor	dh, dh		; clear the error bits
 		xor	bp, bp		; indicate finshed (no continuation)
 		ret
 
@@ -216,12 +208,5 @@ test_dram:
 ; 	dl = number of segments to test (will test dl*si bytes total)
 ; 	si = size of segment to test (must be a multiple of 16)
 		mov	byte [ss:test_offset], 0	; set the column offset for the test
-
-		xor	al, al
-		; mov	bx, first_segment
-		; mov	dl, num_segments
-		; mov	si, bytes_per_segment
 		call	marchu
 
-	; .hlt:	hlt
-	; 	jmp	.hlt

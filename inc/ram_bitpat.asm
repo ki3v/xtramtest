@@ -46,27 +46,23 @@ ram_test_bitpat:
 ;	es:di = address of the error
 		mov	[ss:test_label], word scr_label_bit
 
-		mov	bp, bitpat_segment_all
+		mov	al, 0xFF
 		call	bitpat_one_test
-
-		; mov	bp, bitpat_segment
-		; mov 	al, 0x00
-		; call	bitpat_one_test
-		; mov	al, 0xFF
-		; call	bitpat_one_test
-		; mov	al, 0x55
-		; call	bitpat_one_test
-		; mov	al, 0xAA
-		; call	bitpat_one_test
-		; mov	al, 0x01
-		; call	bitpat_one_test
+		mov 	al, 0x00
+		call	bitpat_one_test
+		mov	al, 0x55
+		call	bitpat_one_test
+		mov	al, 0xAA
+		call	bitpat_one_test
+		mov	al, 0x01
+		call	bitpat_one_test
 
 		ret
 
 bitpat_one_test:
 		mov	[ss:test_num], al
-		xor	bx, bx
 		call	scr_test_announce
+		mov	bp, bitpat_segment
 		call	ram_test_upwards
 		ret
 
@@ -105,16 +101,16 @@ bitpat_segment:	; w0
 	.loop:	cmp	dh, 0xFF	; check for all bits in error
 		je	.end		; if so, give up on this segment
 		dec	di		; decrement DI to next lower value
-		mov	[di], ah	; write [es:di] with oritinal test value
-		mov	al, [di]	; read back [es:di]
-		not	al		; invert the value
-		mov	[si], al	; write inverted to [es:si]
+		mov	[di], al	; write [es:di] with original test value
+		mov	ah, [di]	; read back [es:di]
+		not	ah		; invert the value
+		mov	[si], ah	; write inverted to [es:si]
 		movsb			; copy [es:di] := [ds:si], si++, di++ (read, write)
 		dec	di		; rewind to just-written value
-		mov	al, [di]	; read the final inverted value back
-		not	al		; invert the value (back to original)
-		xor	al, ah		; compare the final value to the test value
-		or	dh, al		; accumulate errors
+		mov	ah, [di]	; read the final inverted value back
+		not	ah		; invert the value (back to original)
+		xor	ah, al		; compare the final value to the test value
+		or	dh, ah		; accumulate errors
 		loop	.loop		; continue until the segment is done
 
 	.end:	xor	bp, bp		; indicate done with the segment
@@ -150,35 +146,12 @@ bitpat_segment:	; w0
 	; 	or	dh, ah		; accumulate errors
 	; 	loop	.loop		; continue until the segment is done
 
-bitpat_segment_all:
-		xchg	bp, sp
-		xchg	bp, sp
-		push	cx
-		mov	al, 0x00
-		call 	bitpat_segment
-		pop	cx
-		push	cx
-		mov	al, 0xFF
-		call 	bitpat_segment
-		pop	cx
-		push	cx
-		mov	al, 0x55
-		call 	bitpat_segment
-		pop	cx
-		push	cx
-		mov	al, 0xAA
-		call 	bitpat_segment
-		pop	cx
-		push	cx
-		mov	al, 0x01
-		call 	bitpat_segment
-		pop	cx
-		ret
-
-
 ; ---------------------------------------------------------------------------
 section_restore ; MARK: __ restore __
 ; ---------------------------------------------------------------------------
+
+
+
 
 
 ; MARK: test_dram
