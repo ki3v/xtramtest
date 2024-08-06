@@ -16,6 +16,8 @@ section .rwdata ; MARK: __ .rwdata __
 	test_label	dw	?	; test label
 	test_num	db	?	; test number
 
+	test_offset	db	?	; test x offset on screen (how many columns to the right)
+
 ; ---------------------------------------------------------------------------
 section .romdata ; MARK: __ .romdata __
 ; ---------------------------------------------------------------------------
@@ -52,7 +54,7 @@ scr_test_header_xy:	equ	0x0502
 scr_test_header:	asciiz	"Pass "
 scr_test_separator:	asciiz	": "
 scr_label_march:	asciiz	"March-U "
-scr_label_bit:		asciiz	"Bit Pattern "
+scr_label_bit:		asciiz	"Bus Exercise "
 
 scr_sep_line		equ	2
 scr_sep_char		equ	0xC4
@@ -66,8 +68,7 @@ scr_arrow_attr		equ	0x0A
 section .lib ; MARK: __ .lib __
 ; ---------------------------------------------------------------------------
 
-; MARK: scr_get_hex
-scr_get_hex:
+scr_get_hex: ; MARK: scr_get_hex
 ; get the byte value of two hex digits from the screen
 ; inputs:
 ;	es:di = address of the hex digits
@@ -154,14 +155,12 @@ scr_fill_line:
 
 ; MARK: scr_test_announce
 scr_test_announce:
-; input:
-;	ds:si = test label
-;	ah = test number
-	push	dx
 	push	ax
+	push	dx
 	push	si
 	push	ds
-	push	cs
+
+	push	cs			; we get strings from the ROM in CS
 	pop	ds
 
 	mov	ah, scr_test_normal_attr
@@ -185,12 +184,15 @@ scr_test_announce:
 	mov	si, [ss:test_label]
 	call	scr_puts
 	mov	ah, [ss:test_num]
-	call	scr_put_hex_ah
 
+	; cmp	ah, 0xFF		; skip if we've indicated not to print this number
+	; je	.skip
+	call	scr_put_hex_ah
+.skip:
 	pop	ds
 	pop	si
-	pop	ax
 	pop 	dx
+	pop	ax
 	ret
 
 ; MARK: scr_puts_labels
@@ -201,6 +203,10 @@ scr_puts_labels:
 	mov	al, [ss:scrAttr]
 	push	ax
 	push	di
+
+	push	cs
+	pop	ds
+
 
 .loop:	lodsb				; fetch the attribute
 	cmp	al, 0			; check for last string
@@ -521,6 +527,7 @@ scr_goto_seg:
 	shr	dl, 1
 	; shr	dl, 1
 	add	dl, x_grid_start	; add the base x position
+	add	dl, [ss:test_offset]	; move over to the current test
 
 	call	scr_goto
 	pop	dx
@@ -587,6 +594,8 @@ section_restore ; MARK: __ restore __
 ; ---------------------------------------------------------------------------
 
 draw_screen:
+	mov 	[ss:test_offset], byte 0
+
 	xor	dx, dx
 	call	scr_goto
 	mov	ah, title_attr

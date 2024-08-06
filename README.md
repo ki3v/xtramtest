@@ -2,7 +2,7 @@
 
 by David Giller and Adrian Black
 
-See the YouTube video on [Adrian's Digital Basement](https://youtube.com/@adriansdigitalbasement) (direct video link pending release)
+See the YouTube video on [Adrian's Digital Basement](https://youtube.com/@adriansdigitalbasement) ([direct video link](https://youtu.be/KcrMssDp8Mo?si=5GnlTwxYQo68uhtq))
 
 ![Screenshot](img/screenshot.png)
 

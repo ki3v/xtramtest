@@ -1,7 +1,7 @@
 #!/usr/bin/env perl
 use strict;
 use Data::Dumper;
-use Antsy qw(:all);
+# use Antsy qw(:all);
 
 my $break = join( "|", split( / /, $ENV{BREAK} ) );
 my $reBreak = qr/$break/;
@@ -106,26 +106,26 @@ my $reLine = qr/^
 	(?<source>.*)
 $/x;
 
-my %dc = (
-	lnum => reset,
-	addr => text_white,
-	bin => bold . text_green,
-	level => text_yellow,
-	label => bold . text_cyan,
-	source => text_white,
-);
+# my %dc = (
+# 	lnum => reset,
+# 	addr => text_white,
+# 	bin => bold . text_green,
+# 	level => text_yellow,
+# 	label => bold . text_cyan,
+# 	source => text_white,
+# );
 
 
-sub dumpline {
-	my %l = shift->%*;
-	my $s = "";
+# sub dumpline {
+# 	my %l = shift->%*;
+# 	my $s = "";
 
-	for my $k ( qw( lnum addr bin level label source ) ) {
-		$s .= $dc{$k} . "$k:$l{$k}" . reset . " " if defined $l{$k} and $l{$k} ne "";
-	}
+# 	for my $k ( qw( lnum addr bin level label source ) ) {
+# 		$s .= $dc{$k} . "$k:$l{$k}" . reset . " " if defined $l{$k} and $l{$k} ne "";
+# 	}
 
-	warn "  $s\n";
-}
+# 	warn "  $s\n";
+# }
 
 my @SECTS = ( $SYM{".text"} );
 sub cur_sect () { $SECTS[$#SECTS] } 
@@ -136,13 +136,13 @@ sub set_sect ($) { $SECTS[$#SECTS] = $SYM{$_[0]} }
 sub cur_pos () { $SECTS[$#SECTS]->{pos} }
 sub set_pos ($) { $SECTS[$#SECTS]->{pos} = $_[0] }
 
-sub section_summary {
-	my $kw = shift // die;
-	my $s = shift // cur_sect;
-	my $a1 = shift // bold . text_white . underline;
-	my $a2 = shift // text_magenta;
-	return sprintf "%s%s%s %s%s start=%X pos=%X%s  ( %s )\n", $a1, $kw, reset, $a2, $s->{name}, $s->{start}, $s->{pos}, reset, join( " ", map { $_->{name} } @SECTS );
-}
+# sub section_summary {
+# 	my $kw = shift // die;
+# 	my $s = shift // cur_sect;
+# 	my $a1 = shift // bold . text_white . underline;
+# 	my $a2 = shift // text_magenta;
+# 	return sprintf "%s%s%s %s%s start=%X pos=%X%s  ( %s )\n", $a1, $kw, reset, $a2, $s->{name}, $s->{start}, $s->{pos}, reset, join( " ", map { $_->{name} } @SECTS );
+# }
 
 my $reRelocInsn = qr/^(?:call|jmp|j\w+)\b/;
 
@@ -189,7 +189,8 @@ while (<$fh>) {
 		}
 
 	} else {
-		warn text_red, "$_", reset, "\n";
+		# warn text_red, "$_", reset, "\n";
+		warn "$_\n";
 	}
 }
 

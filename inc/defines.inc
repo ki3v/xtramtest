@@ -75,6 +75,8 @@ CGA_data	equ	3D5h		; 6845 Data Register
 CGA_ctrl	equ	3D8h		; Mode Control Register
 CGA_pal		equ	3D9h		; Color Select Register
 
+CGA_CTRL_VSVS	equ	0x08		; Vertical Sync bit
+
 FdcDor		equ	3F2h		; Digital Output Register (DOR)
 FdcMsr		equ	3F4h		; Main Status Register (MSR)
 FdcCdr0		equ	3F5h		; Command/Data Register 0
