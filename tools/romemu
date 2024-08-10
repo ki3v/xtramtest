@@ -1,0 +1,9 @@
+#!/bin/bash
+F=xtramtest
+BASE=`dirname $0`
+$BASE/build || exit -1
+
+FILE=${1:-$F.32k}
+
+set -x
+eprom -mem 27256 -auto y $FILE

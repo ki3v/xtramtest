@@ -18,7 +18,7 @@ echo "db \"$VERSION\"" > version.inc
 # nasm -MG -MP -MF $F.dep -iinc $F.asm || exit -1
 nasm -o $F.8k -iinc $F.asm -l $F.lst -Lm || exit -1
 $BASE/size $F.map
-$BASE/makerom $F.8k > $F.32k || exit -1
+$BASE/makerom $F.8k $F.32k $F.64k || exit -1
 
 # set up a debugscript with breakpoints
 $BASE/make_debugscript $F.map > $F.debug || exit -1

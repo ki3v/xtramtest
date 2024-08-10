@@ -18,38 +18,54 @@ The ROM does not currently test parity RAM or the parity checking circuit. Parit
 
 ## Using this ROM to test RAM in your PC/XT or clone
 
+There are two ways to use this ROM to test RAM in your computer.
+
+### Method 1: Replacing the system BIOS with the XTRAMTEST ROM
+
+The first way of using this ROM is to pull out your system BIOS ROM chip and temporarily replace it with an EPROM programmed with one of our ROM images.
+
 Two images are included in the Releases (see the right side of the GitHub project page): `xtramtest.8k` is an 8K binary image for burning into a 2764/2864 or equivalent 64Kbit/8Kbyte E(E)PROM, and `xtramtest.32k` is a 32K image for burning into a 27256/28256 or equivalent 256Kbit/32Kbyte E(E)PROM.  
 
 You may want to remove all other ISA cards (besides the video card) and remove all the other ROM chips from the system before running this ROM, just to eliminate any potential issues.
 
-The Keyboard or any other peripherals are not tested or needed to run this ROM. Currently the speaker is not used either, although beep code support may be added in the future.
+The Keyboard or any other peripherals are not tested or needed to run this ROM. Currently the speaker is not used either other than to beep at the beginning to signal that the ROM has started, although beep code support may be added in the future.
 
-There are a few different ways to use this ROM, depending on your hardware. Running the code works generally the same way as the SuperSoft/Landmark Diagnostic and Ruud's Diagnostic ROM for the IBM PC and PC XT. This link on minuszerodegrees.net describes the nuance of getting this running on various IBM machines:
+There are a few different ways to use this ROM, depending on your hardware. Installing this ROM is generally similar to using the SuperSoft/Landmark Diagnostic and Ruud's Diagnostic ROM for the IBM PC and PC XT. This link on minuszerodegrees.net describes the nuance of getting this running on various IBM machines:
 
 [Supersoft/Landmark Diagnostic ROM's for IBM 5150/5155/5160/5162/5170](https://www.minuszerodegrees.net/supersoft_landmark/Supersoft%20Landmark%20ROM.htm)
 
 This ROM currently only works with IBM MDA (and compatible) cards and IBM CGA (and compatible) cards. It will not work with EGA or VGA (and compatible cards.) This is something that may be added in the future, but EGA/VGA type cards usually require their own BIOS routines to initialize, which usually require working RAM.
 
-### IBM PC 5150
+#### As system BIOS replacement in the IBM PC 5150
 
 This machine uses 2364 mask ROMs. These sockets are not compatible with 2764/2864 chips and you must use an adapter. Use an adapter that goes from 2764/2864 to the 2364 and use the `xtramtest.8k` binary available under Releases. See this link:
 
 [IBM 5150 motherboard  -  Use of '2364 Adapter'](https://minuszerodegrees.net/5150/motherboard/IBM%205150%20motherboard%20-%20Use%20of%202364%20adapter.htm)
 
-### IBM PC/XT 5160
+#### As system BIOS replacement in the IBM PC/XT 5160
 
 This machine uses normal ROMs which are compatible with 27C256 (32KB) EPROMs. Download the `xtramtest.32k` Binary and put that onto a 27C256 EPROM and install into U18. See these links for more information:
 
 [Ruud's diagnostic ROM fitted to the 64-256KB version of IBM 5160 motherboard](https://minuszerodegrees.net/ruuds_diagnostic_rom/5160/64-256KB.htm)
 [Ruud's Diagnostic ROM fitted to the 256-640KB version of IBM 5160 motherboard](https://minuszerodegrees.net/ruuds_diagnostic_rom/5160/256-640KB.htm)
 
-### PC/XT-class clones
+#### As system BIOS replacement in PC/XT-class clones
 
 These machines usually use 2764 or sometimes 27128 EPROMs. If it uses a 2764, you can use a 2864 in place of the original BIOS and flash the 8k image onto it. On machines using a 27128, you will need to load the 8k image into the 16k eprom twice before you burn the EPROM.  See also:
 
 [Ruud's diagnostic ROM fitted to PC and XT clones](https://minuszerodegrees.net/ruuds_diagnostic_rom/clones/clones.htm)
 
 The RAM layout may be different on these machines, so make sure to determine if your board differs from what is shown here.
+
+### Method 2: Installing as an "option ROM"
+
+The second way this ROM can be used is by installing it as an "option ROM".  The exact method of preparing a ROM chip will vary (and is currently left as an exercise for the reader, as they say), but it is the same as preparing any other option ROM such as XT-IDE.
+
+Once the EPROM is prepared, it can be installed in any option ROM socket on the motherboard.  Depending on your BIOS, you may be able to install the option ROM in the BASIC ROM socket (which will generally be empty on clones and filled on actual IBM PC/XT computers).
+
+Then, when booting any BIOS that supports option ROMs, the BIOS will initialize this ROM, which will install itself as a warm start handler, and when the BIOS attempts to boot the operating system, this BIOS will print a message asking you to press the T key to start RAM tests, or any other key (or just wait a few seconds) to continue booting.
+
+If there are other boot-providing option ROMs in the system (such as XT-IDE or network cards with boot ROMs) which are loaded at higher addresses, they will be given an opportunity to boot first, and they may not permit the XTRAMTEST ROM a chance to take over, so you may have to remove other cards in order to get this ROM to run in option ROM mode.
 
 ## Memory layout of a typical PC/XT clone motherboard
 

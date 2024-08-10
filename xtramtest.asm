@@ -75,6 +75,8 @@ section .lib ; MARK: __ .lib __
 section .text ; MARK: __ .text __
 ; ---------------------------------------------------------------------------
 
+%include "option_rom.asm"
+
 ; MARK: DiagStart
 DiagStart:
 ; ************************************************************************************************
@@ -119,7 +121,7 @@ PowerOn:
 S_FFF5:
 	db __DATE__		; Assembled date (YYYY-MM-DD)
 	db 0			; space for checksum byte
-	
+
 
 section .rwdata
 	rwdata_end:

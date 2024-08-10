@@ -1,7 +1,8 @@
 #!/usr/bin/env perl
 # for 8K ROM
 # calculate the checksum and set the last byte to make the sum 0
-# concatenate the file 4 times to make a 32K image
+# place at the end of a 32K ROM image
+# use 2 copies end to end to make a 64K image for using 27512 in 27256 socket
 
 use strict;
 use bytes;
@@ -9,22 +10,73 @@ use bytes;
 my $insize = 8*1024;
 my $copies = 4;
 
-my $fn = $ARGV[0];
+my ( $fn, $fn32, $fn64 ) = @ARGV;
 
-open my $fh, "<", $fn or die "$_[0]: $!\n";
+open my $fh, "+<", $fn or die "$fn: $!\n";
 binmode $fh;
 binmode STDOUT;
 
 my $bytes;
 $/ = undef;
 $bytes = <$fh>;
-close $fh;
 
 my $count = length( $bytes );
 die "file is the wrong size: $count != $insize\n" unless $count == $insize;
 
-my $sum = unpack( "%8C*", $bytes );
-my $diff = ( 0x100 - $sum ) & 0xFF;
-substr( $bytes, -1, 1, chr( $diff ) );
+my $lastbyte = ord( substr( $bytes, -1 ) );
+# warn sprintf "lastbyte = %02x\n", $lastbyte;
 
-for ( 1..$copies ) { print $bytes; }
+my $sum = unpack( "%8C*", $bytes );
+# warn sprintf "sum =  %02x\n", $sum;
+my $diff = ( 0x100 - $sum ) & 0xFF;
+# warn sprintf "diff = %02x\n", $diff;
+
+my $newlastbyte = ( $lastbyte + $diff ) % 0xFF;
+# warn sprintf "newlastbyte = %02x\n", $newlastbyte;
+
+substr( $bytes, -1, 1, chr( ( $lastbyte + $diff ) % 0xFF ) );
+
+my $newsum = unpack( "%8C*", $bytes );
+# warn sprintf "newsum = %02x\n", $newsum;
+
+seek $fh, -1, 2;
+print $fh chr( $newlastbyte );
+close $fh;
+
+if ( $fn32 ) {
+	open my $fh, ">", $fn32 or die "$fn32: $!\n";
+	binmode $fh;
+	print $fh "\xFF" x ( $insize*3 );
+	print $fh $bytes;
+}	close $fh;
+
+if ( $fn64 ) {
+	open my $fh, ">", $fn64 or die "$fn64: $!\n";
+	binmode $fh;
+	print $fh "\xFF" x ( $insize*3 );
+	print $fh $bytes;
+	print $fh "\xFF" x ( $insize*3 );
+	print $fh $bytes;
+	close $fh;
+}
+
+sub make_bios {
+	my ( $bfile ) = @_;
+
+	if ( -f $bfile ) {
+		open my $bios, "<", $bfile or die "$bfile: $!\n";
+		my $bdata = <$bios>;
+		close $bios;
+
+		my $ofile = "xtramtest_$bfile";
+		open my $fh, ">", $ofile or die "$ofile: $!\n";
+		binmode $fh;
+		print $fh "\xFF" x ( $insize*2 );
+		print $fh $bytes;
+		print $fh $bdata;
+		close $fh;
+	}
+}
+
+make_bios "PCXTBIOS.BIN";
+make_bios "GLABIOS.BIN";

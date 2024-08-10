@@ -1,0 +1,7 @@
+#!/bin/bash
+F=xtramtest
+BASE=`dirname $0`
+$BASE/build || exit -1
+
+set -x
+minipro -p 'W27C512@DIP28' -w $F.64k

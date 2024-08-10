@@ -1,10 +1,12 @@
 *.8k
 *.32k
+*.64k
 *.lst
 *.map
 *.debug
 *.i
 *.o
+*.bin
 .vscode
 cfg
 roms
