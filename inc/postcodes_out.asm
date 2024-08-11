@@ -30,12 +30,12 @@ CheckpointStack:
 	mov	dx,LPT3			; I/O port 3BCh. Parallel/LPT port on most MDA cards.
 	out	dx,al
 %endif
-
+%ifdef USE_POSTPORT
 	;--------------------------------------------
 	; Output the byte to IBM AT's debug port.  Rarely works for PC's and XT's.
 	;--------------------------------------------
 	out	80h,al
-	
+%endif
 	;--------------------------------------------
 	; Display the byte in the top-right corner of the screen.
 	;--------------------------------------------

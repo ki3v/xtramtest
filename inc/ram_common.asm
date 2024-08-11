@@ -6,10 +6,10 @@ seg_start	equ	0
 ; ---------------------------------------------------------------------------
 section_save
 ; ---------------------------------------------------------------------------
-section .rwdata ; MARK: __ .rwdata __
+section .romdata ; MARK: __ .romdata __
 ; ---------------------------------------------------------------------------
-
-
+; scr_000		asciiz	"00:0-", 0
+; scr_FFF		asciiz	"00:FFF", 0
 
 ; ---------------------------------------------------------------------------
 section .lib ; MARK: __ .lib __
@@ -134,8 +134,28 @@ ram_test_segment:
 startseg:
 		; XXX - show on the screen that we are starting this segment
 		push	ax
+		push	si
+		push	ds
+		push 	dx		; print the test addresses
 
+		mov	dx, scr_addrs_xy
+		call	scr_goto
+
+		mov	[ss:scrAttr], byte scr_test_header_attr
 		mov	ax, es
+		call	scr_put_hex_ah
+
+		call	scr_getxy
+		add	dl, 5
+		call	scr_goto
+
+		add	ax, 0x0300
+		call	scr_put_hex_ah
+
+		pop	dx
+		pop	ds
+		pop	si
+
 		mov	al, ah
 		call	scr_goto_seg
 

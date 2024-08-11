@@ -55,6 +55,7 @@
 ;         - Such RAM does not exist.
 ; ****************************************************************************
 %macro __CHECKPOINT__NOSTACK__ 1
+%ifdef USE_POSTPORT
 ..@CHECKPOINT_%1:
 	mov	al,%1
 
@@ -62,6 +63,7 @@
 	; IBM's debug port
 	; -----------------------
 	out	80h,al		; IBM AT's debug port. Rarely works for PC's and XT's.
+%endif
 
 %ifdef USE_LPT
 	;------------------------
@@ -127,8 +129,10 @@
 ; REMARK: Only for use when the stack is available !!!
 ; ****************************************************************************
 %macro __CHECKPOINT__ 1
+%ifdef USE_POSTPORT
 	mov	al,%1
 	call	CheckpointStack
+%endif
 %endmacro
 
 %macro asciiz 1+

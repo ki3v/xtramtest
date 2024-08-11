@@ -216,7 +216,7 @@ DispRdr:
 	; First, do MDA.
 	; ------------------------
 	mov	si,title_only
-	mov	di,2			; DI := starting postion of text (offset into MDA/CGA video RAM)
+	mov	di,162			; DI := starting postion of text (offset into MDA/CGA video RAM)
 	mov	ax,SegMdaRam
 	mov	es,ax			; Point ES to segment address of MDA video RAM
 	mov	ah,07h			; Char attribute = normal
@@ -231,7 +231,7 @@ DispRdr:
 	; Next, do CGA.
 	; ------------------------
 	mov	si,title_only
-	mov	di,2			; DI := starting postion of text (offset into MDA/CGA video RAM)
+	mov	di,162			; DI := starting postion of text (offset into MDA/CGA video RAM)
 	mov	ax,SegCgaRam
 	mov	es,ax			; Point ES to segment address of CGA video RAM
 	mov	ah,07h			; Char attribute = normal

@@ -70,6 +70,7 @@ section .lib ; MARK: __ .lib __
 ; procedures to include in the ROM
 %include "delay.asm"
 %include "postcodes_out.asm"
+%include "screen.asm"
 
 ; ---------------------------------------------------------------------------
 section .text ; MARK: __ .text __
@@ -86,6 +87,9 @@ DiagStart:
 	%include "050_beep.inc"
 	%include "060_vram.inc"
 
+	call	scr_clear
+	call 	draw_screen
+
 ; MARK: DiagLoop
 DiagLoop:
 ; ************************************************************************************************
@@ -100,8 +104,6 @@ DiagLoop:
 	add	word [ss:pass_count], 1		; Increment the pass count.
 
 	; __CHECKPOINT__ 0x12 ;++++++++++++++++++++++++++++++++++++++++
-	%include "screen.asm"
-
 	%include "ram_common.asm"
 	%include "ram_marchu.asm"
 	%include "ram_bitpat.asm"
