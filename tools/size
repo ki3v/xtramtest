@@ -9,6 +9,7 @@ my %sect;
 
 my $text = 0;
 my $bss = 0;
+my $last = 0;
 
 sub header { 
 	return if $ph;
@@ -28,6 +29,7 @@ while ( <> ) {
 		printf "%6X %6X %6X %6d  %8.8s  %s\n", $start, $end, $size, $size, $bits, $name;
 		if ( $bits eq "progbits" ) {
 			$text += $size;
+			$last = $end if $end > $last and $name ne ".resetvec";
 		} else {
 			$bss += $size;
 		}
@@ -38,7 +40,7 @@ while ( <> ) {
 
 printf "\n%6d bytes text\n%6d bytes bss\n", $text, $bss;
 
-if ( exists $sect{".resetvec"} and exists $sect{".text"} ) {
-	printf "\n%d bytes ROM space free\n\n", $sect{".resetvec"}{start} - $sect{".text"}{end};
+if ( exists $sect{".resetvec"} ) {
+	printf "\n%d bytes ROM space free\n\n", $sect{".resetvec"}{start} - $last;
 	exit;
 }

@@ -10,73 +10,67 @@ use bytes;
 my $insize = 8*1024;
 my $copies = 4;
 
-my ( $fn, $fn32, $fn64 ) = @ARGV;
+my %BIN;
 
-open my $fh, "+<", $fn or die "$fn: $!\n";
-binmode $fh;
-binmode STDOUT;
+sub getbin {
+	my ( $fn ) = @_;
+	return $BIN{$fn} if $BIN{$fn};
 
-my $bytes;
-$/ = undef;
-$bytes = <$fh>;
-
-my $count = length( $bytes );
-die "file is the wrong size: $count != $insize\n" unless $count == $insize;
-
-my $lastbyte = ord( substr( $bytes, -1 ) );
-# warn sprintf "lastbyte = %02x\n", $lastbyte;
-
-my $sum = unpack( "%8C*", $bytes );
-# warn sprintf "sum =  %02x\n", $sum;
-my $diff = ( 0x100 - $sum ) & 0xFF;
-# warn sprintf "diff = %02x\n", $diff;
-
-my $newlastbyte = ( $lastbyte + $diff ) % 0xFF;
-# warn sprintf "newlastbyte = %02x\n", $newlastbyte;
-
-substr( $bytes, -1, 1, chr( ( $lastbyte + $diff ) % 0xFF ) );
-
-my $newsum = unpack( "%8C*", $bytes );
-# warn sprintf "newsum = %02x\n", $newsum;
-
-seek $fh, -1, 2;
-print $fh chr( $newlastbyte );
-close $fh;
-
-if ( $fn32 ) {
-	open my $fh, ">", $fn32 or die "$fn32: $!\n";
+	open my $fh, "<", $fn or die "$fn: $!\n";
 	binmode $fh;
-	print $fh "\xFF" x ( $insize*3 );
-	print $fh $bytes;
-}	close $fh;
+	my $bytes;
+	$/ = undef;
+	$bytes = <$fh>;
+	close $fh;
 
-if ( $fn64 ) {
-	open my $fh, ">", $fn64 or die "$fn64: $!\n";
+	my $count = length( $bytes );
+	die "file is the wrong size: $count != $insize\n" unless $count == $insize;
+
+	my $lastbyte = ord( substr( $bytes, -1 ) );
+	my $sum = unpack( "%8C*", $bytes );
+	my $diff = ( 0x100 - $sum ) & 0xFF;
+	my $newlastbyte = ( $lastbyte + $diff ) % 0xFF;
+
+	substr( $bytes, -1, 1, chr( ( $lastbyte + $diff ) % 0xFF ) );
+
+	$BIN{$fn} = $bytes;
+	return $bytes;
+}
+
+
+sub write_rom {
+	my ( $fn ) = @_;
+
+	$fn =~ m/^(.*?)[.](\d+)[kK]$/ or die "bad filename: $fn\n";
+	my ( $base, $size ) = ( $1, $2 );
+
+	my $bytes = getbin( "$base.bin" );
+
+	open my $fh, ">", $fn or die "$fn: $!\n";
 	binmode $fh;
-	print $fh "\xFF" x ( $insize*3 );
-	print $fh $bytes;
-	print $fh "\xFF" x ( $insize*3 );
-	print $fh $bytes;
+
+	if ( $size == $insize / 1024 ) {
+		print $fh $bytes;
+	} elsif ( $size == 16 or $size == 32 ) {
+		my $blanks = int( $size*1024 / $insize - 1 );
+		print $fh "\xFF" x ( $insize * $blanks );
+		print $fh $bytes;
+	} elsif ( $size == 64 ) {
+		print $fh "\xFF" x ( $insize * 3 );
+		print $fh $bytes;
+		print $fh "\xFF" x ( $insize * 3 );
+		print $fh $bytes;
+	} else {
+		die "bad size: $size\n";
+	}
+
 	close $fh;
 }
 
-sub make_bios {
-	my ( $bfile ) = @_;
+my $TARGET = $ENV{TARGET} // "xtramtest";
+@ARGV = ( "$TARGET.8k", "$TARGET.32k", "$TARGET.64k" )
+	unless @ARGV;
 
-	if ( -f $bfile ) {
-		open my $bios, "<", $bfile or die "$bfile: $!\n";
-		my $bdata = <$bios>;
-		close $bios;
-
-		my $ofile = "xtramtest_$bfile";
-		open my $fh, ">", $ofile or die "$ofile: $!\n";
-		binmode $fh;
-		print $fh "\xFF" x ( $insize*2 );
-		print $fh $bytes;
-		print $fh $bdata;
-		close $fh;
-	}
+for my $fn ( @ARGV ) {
+	write_rom( $fn );
 }
-
-make_bios "PCXTBIOS.BIN";
-make_bios "GLABIOS.BIN";

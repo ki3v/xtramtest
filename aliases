@@ -1,3 +1,0 @@
-alias build="$PWD/tools/build"
-alias run="$PWD/tools/run"
-alias debug="$PWD/tools/run -debug"

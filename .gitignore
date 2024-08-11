@@ -1,4 +1,5 @@
 *.8k
+*.16k
 *.32k
 *.64k
 *.lst
@@ -7,6 +8,7 @@
 *.i
 *.o
 *.bin
+*.dep
 .vscode
 cfg
 roms
