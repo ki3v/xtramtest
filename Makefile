@@ -1,4 +1,5 @@
 TARGET := xtramtest
+VERSION = $(shell git describe --tags --always --dirty=-local --broken=-XX 2>/dev/null || echo local_build)
 
 ROMS = $(TARGET).8k $(TARGET).32k $(TARGET).64k
 
@@ -18,7 +19,7 @@ export RAM VIDEO BREAK FLAGS
 
 
 %.bin: %.asm
-	$(NASM) $(INC) -f bin -o $@ -l $(@:%.bin=%.lst) -Lm $<
+	$(NASM) $(INC) -f bin -o $@ -l $(@:%.bin=%.lst) -Lm -dVERSION="$(VERSION)" $<
 	$(info )
 	@tools/size $(@:%.bin=%.map)
 
@@ -31,13 +32,10 @@ $(ROMS): $(TARGET).bin
 clean:
 	rm -f $(ROMS) $(TARGET).bin $(TARGET).lst $(TARGET).map $(TARGET).debug $(TARGET).dep
 
-$(TARGET).bin: version.inc
+version:
+	@echo Building $(TARGET) $(VERSION)
+	@echo ""
 
-version.inc: VERSION = $(shell git describe --tags --always --dirty=-local --broken=-XX 2>/dev/null || echo local_build)
-
-version.inc: $(SRC) Makefile
-	$(info Building $(TARGET) $(VERSION))
-	@echo 'db "'$(VERSION)'"' > $@
 
 $(TARGET).dep: $(SRC)
 	$(NASM) $(INC) -M -MF $@ -MT $(TARGET).bin $< 
@@ -63,9 +61,9 @@ romemu: all
 	eprom -mem 27256 -auto y $(TARGET).32k
 
 
-.PHONY: binaries clean run $(TARGET).map romburn romemu
+.PHONY: binaries clean run $(TARGET).map romburn romemu version
 .DEFAULT: all
 
-all: $(ROMS)
+all: version $(ROMS)
 
 -include $(TARGET).dep

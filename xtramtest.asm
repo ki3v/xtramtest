@@ -52,11 +52,14 @@ title_attr	equ	0Fh
 subtitle_attr	equ	07h
 byline_attr	equ	02h
 
+%defstr VERSION_STRING VERSION
+
 title_text: ; attr, x, y, text, 0 (terminate with 0 for attr)
 			db 	title_attr,   1,  1
 		title_only:	db	"XTRAMTEST ", 0
 			db	subtitle_attr, 11, 1
-			%include "version.inc"
+			; %include "version.inc"
+			db VERSION_STRING
 			db " (", __DATE__, ")", 0
 			; db 0
 			db	title_attr,  54,  1, "github.com/ki3v/xtramtest", 0
