@@ -34,7 +34,9 @@ There are a few different ways to use this ROM, depending on your hardware. Inst
 
 [Supersoft/Landmark Diagnostic ROM's for IBM 5150/5155/5160/5162/5170](https://www.minuszerodegrees.net/supersoft_landmark/Supersoft%20Landmark%20ROM.htm)
 
-This ROM currently only works with IBM MDA (and compatible) cards and IBM CGA (and compatible) cards. It will not work with EGA or VGA (and compatible cards.) This is something that may be added in the future, but EGA/VGA type cards usually require their own BIOS routines to initialize, which usually require working RAM.
+When using in the system BIOS ROM socket, this ROM currently only works with IBM MDA (and compatible) cards and IBM CGA (and compatible) cards. It will not work with EGA or VGA (or compatible) cards.  EGA/VGA type cards require their own BIOS routines to initialize, which requires working RAM in the lowest bank.
+
+I have successfully run the XTRAMTEST ROM in option ROM mode with only an EGA card installed, but your experience may vary.  See below.
 
 #### As system BIOS replacement in the IBM PC 5150
 
@@ -55,8 +57,6 @@ These machines usually use 2764 or sometimes 27128 EPROMs. If it uses a 2764, yo
 
 [Ruud's diagnostic ROM fitted to PC and XT clones](https://minuszerodegrees.net/ruuds_diagnostic_rom/clones/clones.htm)
 
-The RAM layout may be different on these machines, so make sure to determine if your board differs from what is shown here.
-
 ### Method 2: Installing as an "option ROM"
 
 The second way this ROM can be used is by installing it as an "option ROM".  The exact method of preparing a ROM chip will vary (and is currently left as an exercise for the reader, as they say), but it is the same as preparing any other option ROM such as XT-IDE.
@@ -67,17 +67,41 @@ Then, when booting any BIOS that supports option ROMs, the BIOS will initialize 
 
 If there are other boot-providing option ROMs in the system (such as XT-IDE or network cards with boot ROMs) which are loaded at higher addresses, they will be given an opportunity to boot first, and they may not permit the XTRAMTEST ROM a chance to take over, so you may have to remove other cards in order to get this ROM to run in option ROM mode.
 
+#### Disadvantages of installing XTRAMTEST as an option ROM
+
+Please understand that while installing as an option ROM can be convenient (the machine can either run the RAM tests or boot to DOS without swapping RAM chips), there are significant disadvantages to running it this way.
+
+Foremost of these disadvantages is that the BIOS will run its RAM test first, and generally if it detects bad RAM, it will refuse to boot.
+
+If you do have bad RAM in the first bank that the BIOS _doesn't_ detect, it will use low portions of RAM to perform its initializations, storing variables and its program stack there.  If any memory corruption occurs during this time, the machine may crash or misbehave in other ways, possibly preventing the RAM tests from starting or from working properly.
+
+Additionally, not all BIOSes support option ROMs (early IBM PC and XT BIOSes did not) and we have not had universal success even with BIOSes that do support option ROMs.
+
+The most reliable results will be obtained by replacing the system BIOS ROM with XTRAMTEST for testing.
+
+However, if you do not have a working MDA or CGA card available, and your first bank of RAM is working well enough to initialize the option ROM, you _may_ be able to get the XTRAMTEST working as an option ROM with EGA/VGA type cards.
+
 ## Memory layout of a typical PC/XT clone motherboard
 
 See also the video linked above for further discussion on how to find the problematic RAM chips on your board.
+
+The RAM layout of various clone machines can vary greatly, so make sure to determine if your board differs from what is shown here.
 
 ![Memory Layout](img/memory_layout.png)
 
 ## Modifying/Building the ROM
 
-This ROM is assembled using [NASM](https://www.nasm.us).  Tested with version NASM version 2.16.03, but any reasonably modern version should work.
+Prerequisites for building:
 
-As part of the IBM BIOS image file preparation, a specific checksum is calculated, and this is inconvenient to do in a cross-platform way.  Currently building the ROM is done using Bash and Perl scripts, and should be reasonably easy to do under Linux, Mac, or Windows (with the WSL Linux environment).
+- Gnu Make
+- [NASM](https://www.nasm.us)
+- Perl (any reasonably modern version).  There are no module dependencies other than what ships with Perl.
+
+Just type `make` to build the ROM.  Both `nasm` and `perl` should be in your `$PATH`.
+
+This ROM is assembled using NASM.  Tested with version NASM version 2.16.03, but any reasonably modern version should work.
+
+As part of the option ROM image file preparation, a checksum is calculated, and this is inconvenient to do in a cross-platform way.  Currently this and a couple other housekeeping tasks are accomplished using Perl scripts.  Perl should be installed by default under Linux, Mac, or the Windows WSL Linux environment.
 
 Build instructions will be forthcoming, but look in the `tools` directory for the scripts used to build the binaries and test under MAME emulation.
 

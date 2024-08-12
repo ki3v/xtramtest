@@ -77,17 +77,8 @@ CGA_pal		equ	3D9h		; Color Select Register
 
 CGA_CTRL_VSVS	equ	0x08		; Vertical Sync bit
 
-FdcDor		equ	3F2h		; Digital Output Register (DOR)
-FdcMsr		equ	3F4h		; Main Status Register (MSR)
-FdcCdr0		equ	3F5h		; Command/Data Register 0
-
 SegMdaRam	equ	0B000h
 SegCgaRam	equ	0B800h
-
-; OurSpAddress	equ	4094		; What we will set the stack pointer to.
-OurSpAddress	equ	1000h		; What we will set the stack pointer to.
-
-BrCornerOffset	equ	3940		; Screen offset at bottom right corner where a segment:offset gets displayed.
 
 
 ;-------------------------------------------------------------------------------
@@ -102,7 +93,18 @@ NmiFlag		equ	0404h		; Address = 0000:0404 - Normally 0. NMI handler will set thi
 ; ;-------------------------------------------------------------------------------
 ; ;Variables stored in unused MDA/CGA video RAM, or 4 KB at A0000.
 ; ;-------------------------------------------------------------------------------
-InvScreenRAM	equ	4000			; Offset of unused portion of MDA/CGA video RAM
+%ifndef SHOWSTACK
+%define SHOWSTACK 0
+%endif
+
+%if SHOWSTACK
+rwdata_base	equ	4000-96			; Offset of unused portion of MDA/CGA video RAM
+rwdata_init_sp	equ	1000h-96		; What we will set the stack pointer to.
+%else
+rwdata_base	equ	4000			; Offset of unused portion of MDA/CGA video RAM
+rwdata_init_sp	equ	1000h			; What we will set the stack pointer to.
+%endif
+
 
 %endif
 [list +]

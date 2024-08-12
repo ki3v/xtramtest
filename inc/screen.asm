@@ -152,7 +152,8 @@ scr_clear:
 
 	mov	ax,0700h+' '	; Attribute + space
 	xor	di,di		; Start at first screen position.
-	mov	cx,2000		; 2000 words.
+	; mov	cx,2000		; 2000 words.
+	mov	cx,rwdata_base/2		; 2000 words.
 	rep	stosw		; STOSW: AX-->[ES:DI], then DI=DI+2
 
 	popf

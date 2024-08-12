@@ -24,9 +24,10 @@ section .lib		follows=.text align=1
 section .romdata	follows=.lib align=1
 section .resetvec 	start=RESET align=1
 
+
 ; .rwdata section in the unused portion of MDA/CGA video RAM, starting at 4000 DECIMAL - 96 bytes.
 ; variables at the bottom, stack at the top.
-section .rwdata		start=InvScreenRAM align=1 nobits
+section .rwdata		start=rwdata_base align=1 nobits
 rwdata_start:
 
 ; %define num_segments 8
@@ -41,7 +42,7 @@ section .rwdata ; MARK: __ .rwdata __
 ; ---------------------------------------------------------------------------
 	pass_count	dw	?			; The number of passes completed. Incremented by 1 each time a pass is completed.
 
-	do_not_use	equ	InvScreenRAM+38		; Do not use this location. It caused a problem if a Mini G7 video card was used.
+	do_not_use	equ	rwdata_base+38		; Do not use this location. It caused a problem if a Mini G7 video card was used.
 
 ; ---------------------------------------------------------------------------
 section .romdata ; MARK: __ .romdata __
@@ -56,12 +57,9 @@ byline_attr	equ	02h
 
 title_text: ; attr, x, y, text, 0 (terminate with 0 for attr)
 			db 	title_attr,   1,  1
-		title_only:	db	"XTRAMTEST ", 0
+	title_only:	db	"XTRAMTEST ", 0
 			db	subtitle_attr, 11, 1
-			; %include "version.inc"
-			db VERSION_STRING
-			db " (", __DATE__, ")", 0
-			; db 0
+			db	VERSION_STRING, " (", __DATE__, ")", 0
 			db	title_attr,  54,  1, "github.com/ki3v/xtramtest", 0
 			db	byline_attr,  0,  3, "by Dave Giller - with Adrian Black - https://youtube.com/@AdriansDigitalBasement", 0
 			db	0
