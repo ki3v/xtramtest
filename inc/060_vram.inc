@@ -121,7 +121,7 @@ TVAR:
 	mov	ax,0FFFFh		; First test data pattern
 
 .L16:	; Fill 96 bytes with test data.
-	mov	di,4000			; End of screen RAM.
+	mov	di,rwdata_base			; End of screen RAM.
 	mov	cx,48			; 48 words = 96 bytes
 	rep	stosw			; Fill 48 words with test data  { STOSW: AX-->[ES:DI], then DI=DI+2 }
 
@@ -130,7 +130,7 @@ TVAR:
 	loop	$
 
 	; See if the 96 bytes have the expected content.
-	mov	di,4000			; End of screen RAM
+	mov	di,rwdata_base			; End of screen RAM
 	mov	cx,48
 	repe	scasw			; Compare 48 words with test data, OK?
 	jne	.FAIL			; --> if no
@@ -193,8 +193,8 @@ TVAR:
 
 	mov	ax,es
 	mov	ss,ax			; SS = ES = segment address of video RAM (either MDA or CGA or A0000).
-	; mov	sp,OurSpAddress-2	; 4094
-	mov	sp,OurSpAddress		; 4096
+	; mov	sp,rwdata_init_sp-2	; 4094
+	mov	sp,rwdata_init_sp		; 4096
 
 
 
@@ -214,13 +214,13 @@ clear_rwdata:
 	mov	es, ax			; Point ES to segment address of MDA/CGA video RAM.
 
 	xor	al, al			; The bytes are to be zeroed.
-	mov	di, InvScreenRAM		; Start at the first variable (Err8253Ch0).
+	mov	di, rwdata_base		; Start at the first variable (Err8253Ch0).
 	; mov	cx, 48			; 48 words = 96 bytes
 	mov	cx, (rwdata_end-rwdata_start)	; erase the variable area
 	rep	stosb			; STOSW: AX-->[ES:DI], then DI=DI+2
 
 	mov	al, 55h			; fill the rest with 55h so we can see how much of the area is used
-	mov	cx, (1000h-InvScreenRAM)-(rwdata_end-rwdata_start)
+	mov	cx, (rwdata_init_sp-rwdata_base)-(rwdata_end-rwdata_start)
 	rep	stosb
 
 	; mov	ax, 0CCCCh
