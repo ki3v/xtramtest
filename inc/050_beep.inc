@@ -1,5 +1,4 @@
 InitBeep:
-	__CHECKPOINT__NOSTACK__ 0x0A
 ; ****************************************************************************
 ; Beep the speaker three times: short-long-short.
 ;

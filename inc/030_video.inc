@@ -37,12 +37,10 @@ section_restore
 ; ---------------------------------------------------------------------------
 
 InitMdaCga:
-	__CHECKPOINT__NOSTACK__ 0x01
 ; ****************************************************************************
 ; Initialise the MDA card or CGA card.
 ; 
 ; At this point in time, we do not know which is present, MDA or CGA.
-; Maybe neither (e.g. user is using a serial port to see checkpoints).
 ; Just assume that an MDA or CGA is fitted.
 ; 
 ; Note that earlier, is some initialisation code specifically targeting the IBM made MDA.
@@ -116,16 +114,12 @@ InitMdaCga:
 	mov	al,00110000b
 	out	dx,al
 
-	; __CHECKPOINT__NOSTACK__ 0x01 ;++++++++++++++++++++++++++++++++++++++++
-
-
 
 SetVideoMode:
 ; ****************************************************************************
 ; Make the cursor invisible.
 ; 
 ; At this point in time, we do not know which is present, MDA or CGA.
-; Maybe neither (e.g. user is using a serial port to see checkpoints).
 ; Just assume that an MDA or CGA is fitted.
 
 	; ------------------------
@@ -178,14 +172,11 @@ SetVideoMode:
 	inc	dl			; DL now pointing to the 6845 Data Register
 	out	dx,al			; Send 07h for that register
 
-	; __CHECKPOINT__NOSTACK__ 0x02 ;++++++++++++++++++++++++++++++++++++++++
-
 
 	; ----------------------------------------------------------------------------
 	; Clear the MDA/CGA video screen.
 	; 
 	; At this point in time, we do not know which is present, MDA or CGA.
-	; Maybe neither (e.g. user is using a serial port to see checkpoints).
 	; Just assume that an MDA or CGA is fitted.
 
 	mov	ax,SegMdaRam	; MDA
@@ -202,14 +193,12 @@ SetVideoMode:
 	mov	cx,4000		; 4000 words.
 	rep	stosw		; STOSW: AX-->[ES:DI], then DI=DI+2
 
-	; __CHECKPOINT__NOSTACK__ 0x03 ;++++++++++++++++++++++++++++++++++++++++
 
 DispRdr:
 ; ****************************************************************************
 ; Display "Ruud's Diagnostic ROM for PC/XT ......"
 ; 
 ; At this point in time, we do not know which is present, MDA or CGA.
-; Maybe neither (e.g. user is using a serial port to see checkpoints).
 ; Just assume that an MDA or CGA is fitted.
 
 	; ------------------------
@@ -243,6 +232,3 @@ DispRdr:
 	jmp	.L20			; -->
 
 .EXIT:
-
-	; __CHECKPOINT__NOSTACK__ 0x04 ;++++++++++++++++++++++++++++++++++++++++
-

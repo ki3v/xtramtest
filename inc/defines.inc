@@ -51,21 +51,6 @@ DmaPageRegCh1	equ	83h
 
 PORT_NMI_MASK	equ	0A0h
 
-%ifdef USE_LPT
-LPT1		equ	378h
-LPT2		equ	278h
-LPT3		equ	3BCh		; Found on most MDA cards.
-%endif
-
-%ifdef USE_SERIAL
-COM1_tx_rx_dll	equ	3F8h		; Tx/Rx or Divisor Latch LS (DLL)
-COM1_ier_dlm	equ	3F9h		; Interrupt Enable Register (IER) or Divisor Latch MS (DLM)
-COM1_iir	equ	3FAh		; Interrupt Ident Register (IIR)
-COM1_lcr	equ	3FBh		; Line Control Register (LCR)
-COM1_mcr	equ	3FCh		; MODEM Control Register (MCR)
-COM1_lsr	equ	3FDh		; Line Status Register (LSR)
-%endif
-
 MDA_index	equ	3B4h		; 6845 Index Register
 MDA_data	equ	3B5h		; 6845 Data Register
 MDA_ctrl	equ	3B8h		; CRT Control Port 1

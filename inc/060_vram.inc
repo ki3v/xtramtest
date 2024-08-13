@@ -11,7 +11,6 @@ section_restore
 ; ---------------------------------------------------------------------------
 
 CheckVideoRAM:
-	__CHECKPOINT__NOSTACK__ 0x0F
 ; ****************************************************************************
 ; From here on, we need RAM for variables and for the stack.
 ;
@@ -21,7 +20,6 @@ CheckVideoRAM:
 ;    - Address A0000 - A RAM card configured to put RAM there.
 ;
 ; If any of those found, set ES to it.
-; If none found, send checkpoint 8A then halt the CPU.
 
 	; ---------------------------------------
 	; First, see if MDA video RAM is present.
@@ -34,8 +32,6 @@ CheckVideoRAM:
 	cmp	word [es:0],0720h	; Read it, the same value?
 	jne	TRYCGA			; --> if no, try CGA
 	
-	__CHECKPOINT__NOSTACK__ 0x0B ;++++++++++++++++++++++++++++++++++++++++
-
 	jmp	CVREXIT			; -->
 
 	; ---------------------------------------
@@ -48,8 +44,6 @@ TRYCGA:	mov	ax,SegCgaRam		; Try CGA.
 	nop				; Delay for I/O.
 	cmp	word [es:0],0720h	; Read it, the same value?
 	jne	TRYA0000		; --> if no, try RAM at A0000.
-
-	__CHECKPOINT__NOSTACK__ 0x0C ;++++++++++++++++++++++++++++++++++++++++
 
 	jmp	CVREXIT			; -->
 
@@ -65,8 +59,6 @@ TRYA0000:
 	cmp	word [es:0],0720h	; Read it, the same value?
 	jne	NOVID			; --> if no
 	
-	__CHECKPOINT__NOSTACK__ 0x0D ;++++++++++++++++++++++++++++++++++++++++
-
 	jmp	CVREXIT			; -->
 
 
@@ -75,25 +67,6 @@ NOVID:
 ; No MDA/CGA/A0000 video RAM found.
 ; ----------------------------------------------------------------------------
 
-	__CHECKPOINT__NOSTACK__ 0x8A ;++++++++++++++++++++++++++++++++++++++++
-
-%ifdef USE_SERIAL
-	; Send '8A' to the COM1 port (i.e. I/O port 3F8h).
-	mov	dx,COM1_lsr	; Line status register (LSR).
-.L66:	in	al,dx
-	and	al,00100000b
-	jz	.L66		; --> if UART is not ready.
-	mov	dx,COM1_tx_rx_dll
-	mov	al,'8'
-	out	dx,al
-	mov	dx,COM1_lsr	; Line status register (LSR).
-.L77:	in	al,dx
-	and	al,00100000b
-	jz	.L77		; --> if UART is not ready.
-	mov	dx,COM1_tx_rx_dll
-	mov	al,'A'
-	out	dx,al
-%endif
 	; Halt the CPU.
 	cli
 	hlt
@@ -147,26 +120,6 @@ TVAR:
 ;   A0000: Failure of the 96 bytes at offset 4000h within the RAM.
 ; ----------------------------------------------------------------------------
 
-	__CHECKPOINT__NOSTACK__ 0x8D ;++++++++++++++++++++++++++++++++++++++++
-
-	; Send '8D' to the COM1 port (i.e. I/O port 3F8h).
-%ifdef USE_SERIAL
-	mov	dx,COM1_lsr		; Line status register (LSR).
-.L66:	in	al,dx
-	and	al,00100000b
-	jz	.L66			; --> if UART is not ready.
-	mov	dx,COM1_tx_rx_dll
-	mov	al,'8'
-	out	dx,al
-	mov	dx,COM1_lsr		; Line status register (LSR).
-.L77:	in	al,dx
-	and	al,00100000b
-	jz	.L77			; --> if UART is not ready.
-	mov	dx,COM1_tx_rx_dll
-	mov	al,'D'
-	out	dx,al
-%endif
-
 	; Display "Test of video RAM failed. Aborting.  <-----"
 	mov	si,TxtVrtf
 	mov	di,482			; DI := starting postion of text (offset into MDA/CGA video RAM)
@@ -199,11 +152,6 @@ TVAR:
 
 
 ; Info:	SS won't change anymore and will serve as a permanent pointer to the video RAM segment.
-
-; Info:	We now have a stack. Therefore, we can now use '__CHECKPOINT__' (uses the stack) instead 
-;	of '__CHECKPOINT__NOSTACK__' (does not use the stack). This will reduce the amount of code.
-
-	__CHECKPOINT__ 0x0E ;++++++++++++++++++++++++++++++++++++++++
 
 
 clear_rwdata:

@@ -69,8 +69,7 @@ section .lib ; MARK: __ .lib __
 ; ---------------------------------------------------------------------------
 
 ; procedures to include in the ROM
-%include "delay.asm"
-%include "postcodes_out.asm"
+; %include "delay.asm"
 %include "screen.asm"
 
 ; ---------------------------------------------------------------------------
@@ -96,7 +95,6 @@ DiagLoop:
 ; ************************************************************************************************
 ; MAIN DIAGNOSTIC LOOP
 ; ************************************************************************************************
-	__CHECKPOINT__ 0x10 ;++++++++++++++++++++++++++++++++++++++++
 
 	; Disable maskable interrupts, and set the direction flag to increment.
 	cli
@@ -104,7 +102,6 @@ DiagLoop:
 
 	add	word [ss:pass_count], 1		; Increment the pass count.
 
-	; __CHECKPOINT__ 0x12 ;++++++++++++++++++++++++++++++++++++++++
 	%include "ram_common.asm"
 	%include "ram_marchu.asm"
 	%include "ram_bitpat.asm"
