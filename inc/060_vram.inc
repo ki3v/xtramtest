@@ -21,48 +21,38 @@ CheckVideoRAM:
 ;
 ; If any of those found, set ES to it.
 
-	; ---------------------------------------
+	mov	si, 4096		; size of VRAM to test
+	mov	ax, cs
+	mov	ss, ax			; SS := CS
+
 	; First, see if MDA video RAM is present.
-	; ---------------------------------------
-	mov	ax,SegMdaRam		; Start with MDA
-	mov	es,ax
-	mov	word [es:0],0720h	; Try one address for the moment.
-	nop				; Delay for I/O.
-	nop				; Delay for I/O.
-	cmp	word [es:0],0720h	; Read it, the same value?
-	jne	TRYCGA			; --> if no, try CGA
-	
-	jmp	CVREXIT			; -->
+TRYMDA:	mov	ax, SegMdaRam		; Start with MDA
+	mov	es, ax
+	jmp	test_vram_march
 
-	; ---------------------------------------
 	; No MDA - See if CGA video RAM present.
-	; ---------------------------------------
-TRYCGA:	mov	ax,SegCgaRam		; Try CGA.
-	mov	es,ax
-	mov	word [es:0],0720h	; Try one address for the moment.
-	nop				; Delay for I/O.
-	nop				; Delay for I/O.
-	cmp	word [es:0],0720h	; Read it, the same value?
-	jne	TRYA0000		; --> if no, try RAM at A0000.
+TRYCGA:	mov	ax, SegCgaRam		; Try CGA.
+	mov	es, ax
+	jmp	test_vram_march
 
-	jmp	CVREXIT			; -->
-
-	; ---------------------------------------
 	; No CGA - See if RAM at address A0000 is present.
-	; ---------------------------------------
 TRYA0000:
-	mov	ax,0A000h
-	mov	es,ax
-	mov	word [es:0],0720h	; Try one address for the moment.
-	nop				; Delay for I/O.
-	nop				; Delay for I/O.
-	cmp	word [es:0],0720h	; Read it, the same value?
-	jne	NOVID			; --> if no
-	
-	jmp	CVREXIT			; -->
+	mov	ax, 0A000h
+	mov	es, ax
+	; jmp	test_vram_march
 
+test_vram_march:
+	%include "ram_marchu_nostack.asm"
 
-NOVID:	
+	or	dh, dh			; did the RAM pass?
+	jz	TVAR			; --> if yes, we have video RAM
+
+	mov	ax, es			; which did we just test?
+	cmp	ax, SegMdaRam
+	je	TRYCGA			; --> if MDA, try CGA
+	cmp	ax, SegCgaRam
+	je	TRYA0000		; --> if CGA, try RAM at A0000
+
 ; ----------------------------------------------------------------------------
 ; No MDA/CGA/A0000 video RAM found.
 ; ----------------------------------------------------------------------------
@@ -70,8 +60,6 @@ NOVID:
 	; Halt the CPU.
 	cli
 	hlt
-
-CVREXIT:
 
 
 TVAR:
