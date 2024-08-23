@@ -1,16 +1,6 @@
 ; code: language=nasm tabSize=8
 %include "defines.inc"
 
-; ---------------------------------------------------------------------------
-section_save
-section .romdata
-; ---------------------------------------------------------------------------
-TxtVrtf: 		db 'Test of video RAM failed. Aborting.  <-----', 0
-; ---------------------------------------------------------------------------
-section_restore
-; ---------------------------------------------------------------------------
-
-CheckVideoRAM:
 ; ****************************************************************************
 ; From here on, we need RAM for variables and for the stack.
 ;
@@ -21,144 +11,54 @@ CheckVideoRAM:
 ;
 ; If any of those found, set ES to it.
 
-	mov	si, 4096		; size of VRAM to test
-	mov	ax, cs
-	mov	ss, ax			; SS := CS
+test_vram:
+		mov	si, 4096		; size of VRAM to test
+		mov	ax, cs
+		mov	ss, ax			; SS := CS
 
-	; First, see if MDA video RAM is present.
-TRYMDA:	mov	ax, SegMdaRam		; Start with MDA
-	mov	es, ax
-	jmp	test_vram_march
+		; First, see if MDA video RAM is present.
+	.MDA:	mov	ax, SEG_MDA_VRAM		; Start with MDA
+		mov	es, ax
+		jmp	.test_marchu
 
-	; No MDA - See if CGA video RAM present.
-TRYCGA:	mov	ax, SegCgaRam		; Try CGA.
-	mov	es, ax
-	jmp	test_vram_march
+		; No MDA - See if CGA video RAM present.
+	.CGA:	mov	ax, SEG_CGA_VRAM		; Try CGA.
+		mov	es, ax
+		jmp	.test_marchu
 
-	; No CGA - See if RAM at address A0000 is present.
-TRYA0000:
-	mov	ax, 0A000h
-	mov	es, ax
-	; jmp	test_vram_march
+		; No CGA - See if RAM at address A0000 is present.
+	.A0000:	mov	ax, 0A000h
+		mov	es, ax
+		; jmp	.test_marchu
 
-test_vram_march:
-	%include "ram_marchu_nostack.asm"
+	.test_marchu:
+		romcall	marchu_nostack
 
-	or	dh, dh			; did the RAM pass?
-	jz	TVAR			; --> if yes, we have video RAM
+		or	dh, dh			; did the RAM pass?
+		jz	.pass			; --> if yes, we have video RAM
 
-	mov	ax, es			; which did we just test?
-	cmp	ax, SegMdaRam
-	je	TRYCGA			; --> if MDA, try CGA
-	cmp	ax, SegCgaRam
-	je	TRYA0000		; --> if CGA, try RAM at A0000
+		mov	ax, es			; which did we just test?
+		cmp	ax, SEG_MDA_VRAM
+		je	.CGA			; --> if MDA, try CGA
+		cmp	ax, SEG_CGA_VRAM
+		je	.A0000			; --> if CGA, try RAM at A0000
 
-; ----------------------------------------------------------------------------
-; No MDA/CGA/A0000 video RAM found.
-; ----------------------------------------------------------------------------
+		; XXX: Report that there is no video RAM.  Beeps?
 
-	; Halt the CPU.
-	cli
-	hlt
+		cli
+		hlt				; No MDA/CGA/A0000 video RAM found.  Halt the CPU.
 
 
-TVAR:
-; ****************************************************************************
-; MDA video RAM, or CGA video RAM, or RAM at address A0000, was found.
-;
-; On entry, ES is pointing to either:
-; - Address B0000 if MDA video card RAM is present; or
-; - Address B8000 if CGA video card RAM is present; or
-; - Address A0000 if a RAM card is configured to put some RAM at A0000.
-; 
-; This diagnostic uses only 96 bytes of the RAM. We will now test those 96 bytes before we commit to using them.
-; 
-;   MDA: 4 KB of video RAM. The last 96 bytes are unused by the card - what this diagnostic will use.
-;   CGA: The last 96 bytes of the first 4 KB are unused by the card - what this diagnostic will use.
-; A0000: The 96 bytes starting at offset 4000h.
-; 
-; Test the 96 bytes. If that test fails, halt the CPU.
+	.pass:	;------------------------
+		; Test successful.
+		; -----------------------
+		; MDA/CGA: Set the stack top to near the top of video RAM.
+		;   A0000: Set the stack top at 4094 bytes into RAM.
 
-	mov	ax,0FFFFh		; First test data pattern
+		mov	ax,es
+		mov	ss,ax			; SS = ES = segment address of video RAM (either MDA or CGA or A0000).
+		mov	sp,rwdata_init_sp	; 4096
 
-.L16:	; Fill 96 bytes with test data.
-	mov	di,rwdata_base			; End of screen RAM.
-	mov	cx,48			; 48 words = 96 bytes
-	rep	stosw			; Fill 48 words with test data  { STOSW: AX-->[ES:DI], then DI=DI+2 }
-
-	; A short delay.
-	xor	cx,cx
-	loop	$
-
-	; See if the 96 bytes have the expected content.
-	mov	di,rwdata_base			; End of screen RAM
-	mov	cx,48
-	repe	scasw			; Compare 48 words with test data, OK?
-	jne	.FAIL			; --> if no
-
-	; They do, so on to next test pattern.
-	sub	ax,5555h		; Next pattern, overflow?
-	jnc	.L16			; --> if no 
-
-	jmp	.PASS			; -->
-
-.FAIL:	
-; ----------------------------------------------------------------------------
-; MDA/CGA: Failure of the last 96 bytes of MDA/CGA video RAM.
-;   A0000: Failure of the 96 bytes at offset 4000h within the RAM.
-; ----------------------------------------------------------------------------
-
-	; Display "Test of video RAM failed. Aborting.  <-----"
-	mov	si,TxtVrtf
-	mov	di,482			; DI := starting postion of text (offset into MDA/CGA video RAM)
-	mov	ax,SegCgaRam
-	mov	es,ax			; Point ES to segment address of MDA video RAM
-	mov	ah,07h			; Char attribute = normal
-.L40:	mov	al,[cs:si]		; Read character
-	inc	si
-	and	al,al			; End of the text?
-	jz	.S40			; --> if yes 
-	stosw				; Write character plus attribute { STOSW: AX-->[ES:DI], then DI=DI+2 }
-	jmp	.L40			; -->
-
-	; Halt the CPU
-.S40:	cli
-	hlt
+	; Info:	SS won't change anymore and will serve as a permanent pointer to the video RAM segment.
 
 
-.PASS:	;------------------------
-	; Test successful.
-	; -----------------------
-	; MDA/CGA: Set the stack top to near the top of video RAM.
-	;   A0000: Set the stack top at 4094 bytes into RAM.
-
-	mov	ax,es
-	mov	ss,ax			; SS = ES = segment address of video RAM (either MDA or CGA or A0000).
-	; mov	sp,rwdata_init_sp-2	; 4094
-	mov	sp,rwdata_init_sp		; 4096
-
-
-
-; Info:	SS won't change anymore and will serve as a permanent pointer to the video RAM segment.
-
-
-clear_rwdata:
-; ****************************************************************************
-; Clear the variables that are stored in the unused 96 bytes at the end of 4 KB sized video RAM.
-; For CGA, that 4 KB is the first block of 4 KB.
-	mov	ax, ss
-	mov	es, ax			; Point ES to segment address of MDA/CGA video RAM.
-
-	xor	al, al			; The bytes are to be zeroed.
-	mov	di, rwdata_base		; Start at the first variable (Err8253Ch0).
-	; mov	cx, 48			; 48 words = 96 bytes
-	mov	cx, (rwdata_end-rwdata_start)	; erase the variable area
-	rep	stosb			; STOSW: AX-->[ES:DI], then DI=DI+2
-
-	mov	al, 55h			; fill the rest with 55h so we can see how much of the area is used
-	mov	cx, (rwdata_init_sp-rwdata_base)-(rwdata_end-rwdata_start)
-	rep	stosb
-
-	; mov	ax, 0CCCCh
-	; push	ax			; test the stack
-	; pop	ax

@@ -14,13 +14,11 @@
 %define marchu_endseg endseg
 
 ; ---------------------------------------------------------------------------
-section_save
-section .romdata ; MARK: __ .romdata __
-	; ram_col_header	db	"A  ErrM ErrB"
+section_save ; MARK: __ save __
 
 
-section .rwdata ; MARK: __ .rwdata __
-; ---------------------------------------------------------------------------
+
+
 
 ; ---------------------------------------------------------------------------
 section .lib ; MARK: __ .lib __
@@ -44,10 +42,9 @@ marchu_delay:
 %endif
 
 
-
+; ---------------------------------------------------------------------------
 ; MARK: marchu
-marchu:
-; perrom march-U on 4k chunks, using stack, with error reporting
+; perform march-U on 4k chunks, using stack, with error reporting
 ; inputs:
 ;	al = test value
 ;	bx = start segment
@@ -62,7 +59,7 @@ marchu:
 ;	ah = error bits at current error (0 = no error)
 ;	dh = running error bits for current segment
 ;	es:di = address of the error
-
+marchu:
 		xor	al, al			; test value for march is always 0
 
 		mov	[ss:test_num], byte 0
@@ -98,6 +95,7 @@ marchu:
 
 		ret
 
+; ---------------------------------------------------------------------------
 ; MARK: marchu_announce
 marchu_announce:
 	%ifdef MARCHU_DELAY
@@ -110,10 +108,6 @@ marchu_announce:
 		call	scr_test_announce
 		add	[ss:test_num], word 1
 		ret
-
-
-
-
 
 
 ; march test components
@@ -134,6 +128,7 @@ marchu_announce:
 ;	es:di = address of the error
 ;	bp = continuation address (for after errors)
 
+; ---------------------------------------------------------------------------
 ; MARK: marchu_w0
 marchu_w0:	; w0
 		rep 	stosb		; fill the range with the test value
@@ -142,6 +137,7 @@ marchu_w0:	; w0
 		xor	bp, bp		; indicate finshed (no continuation)
 		ret
 
+; ---------------------------------------------------------------------------
 ; MARK: marchu_r0w1r1w0
 marchu_r0w1r1w0:	; r0,w1,r1,w0	
 	.loop:	; r0
@@ -173,6 +169,7 @@ marchu_r0w1r1w0:	; r0,w1,r1,w0
 		mov	bp, .d		; set continuation address
 		jmp	.done		; save a few bytes
 
+; ---------------------------------------------------------------------------
 ; MARK: marchu_r0w1
 marchu_r0w1:	; r0,w1
 	.loop:	; r0
@@ -200,13 +197,12 @@ section_restore ; MARK: __ restore __
 ; ---------------------------------------------------------------------------
 
 
+
+
+
+; ---------------------------------------------------------------------------
 ; MARK: test_dram
 test_dram:
-; inputs:
-;	al = test value
-;	bx = start segment
-; 	dl = number of segments to test (will test dl*si bytes total)
-; 	si = size of segment to test (must be a multiple of 16)
 		mov	byte [ss:test_offset], 0	; set the column offset for the test
 		call	marchu
 

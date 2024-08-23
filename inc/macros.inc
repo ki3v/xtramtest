@@ -4,11 +4,23 @@
 
 
 ;=========================================================================
-%macro ss_call 1
+%macro romcall 1
 	mov	sp, %%addr
 	jmp	%1
 	%%addr: dw %%continue
 	%%continue:
+%endmacro
+
+
+;=========================================================================
+%macro bpcall 1
+	mov	bp, %%continue
+	jmp	%1
+	%%continue:
+%endmacro
+
+%macro bpret 0
+	jmp	bp
 %endmacro
 
 ;=========================================================================
