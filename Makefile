@@ -95,15 +95,9 @@ clean: tidy
 	$(NASM) $(INC) -M -MF $@ -MT $@ $< 
 
 
-# $(TARGET).dep: $(SRC)
-# 	$(NASM) $(INC) -M -MF $@ -MT $(TARGET).dep $< 
-
 %.map: %.bin
 	@true
 
-# $(TARGET).map: $(TARGET).bin
-
-# $(TARGET).debug: $(TARGET).map
 %.debug: %.map
 	tools/make_debugscript $< > $@
 
@@ -120,7 +114,7 @@ romburn: all
 	minipro -p 'W27C512@DIP28' -w $(TARGET).64k
 
 romemu: all
-	eprom -mem 27256 -auto y $(TARGET).32k
+	eprom -mem 27256 $(TARGET).32k
 
 
 .PHONY: all binaries clean run romburn romemu version debug deps

@@ -18,12 +18,10 @@ test_vram:
 
 		; First, see if MDA video RAM is present.
 	.MDA:	mov	ax, SEG_MDA_VRAM		; Start with MDA
-		mov	es, ax
 		jmp	.test_marchu
 
 		; No MDA - See if CGA video RAM present.
 	.CGA:	mov	ax, SEG_CGA_VRAM		; Try CGA.
-		mov	es, ax
 		jmp	.test_marchu
 
 		; No CGA - See if RAM at address A0000 is present.
@@ -32,7 +30,10 @@ test_vram:
 		; jmp	.test_marchu
 
 	.test_marchu:
-		romcall	marchu_nostack
+		mov	es, ax			; set up ES and DS to the segment we are testing
+		mov 	ds, ax
+
+		bpcall	marchu_nostack
 
 		or	dh, dh			; did the RAM pass?
 		jz	.pass			; --> if yes, we have video RAM

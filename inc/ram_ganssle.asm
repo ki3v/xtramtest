@@ -79,8 +79,7 @@ ganssle_segment:
 		or	dh, ah		; accumulate errors
 		loop	.loop		; continue until the segment is done
 
-	.end:	xor	bp, bp		; indicate done with the segment
-		ret			; done
+	.end:	ret			; done
 
 ; ---------------------------------------------------------------------------
 section_restore ; MARK: __ restore __

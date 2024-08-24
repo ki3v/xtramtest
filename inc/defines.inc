@@ -3,6 +3,8 @@
 %ifndef DEFINES_INC
 %define DEFINES_INC
 
+; %define TURBO_ENABLED 1
+
 BITS 16
 CPU 8086
 
@@ -41,6 +43,21 @@ IO_PPI_A	equ	0x60		; port A
 IO_PPI_B	equ	0x61		; port B
 IO_PPI_C	equ	0x62		; port C
 IO_PPI_CTL	equ	0x63		; control
+
+PPIB_KBREAD	equ	(1<<7)		; 0 = enable keyboard read, 1 = disable
+PPIB_KBCLOCK	equ	(1<<6)		; 0 = hold kb clock low, 1 = enable clock
+PPIB_IO		equ	(1<<5)		; 0 = enable I/O check, 1 = disable
+PPIB_NOPARITY	equ	(1<<4)		; 0 = enable parity check, 1 = disable
+PPIB_SW		equ	(1<<3)		; 0 = read sw1-4, 1 = read sw5-8
+PPIB_TURBO	equ	(1<<2)		; 0 = turbo mode, 1 = normal
+PPIB_SPKR	equ	(1<<1)		; 0 = speaker off, 1 = speaker on
+PPIB_TIMER2	equ	(1<<0)		; 0 = timer 2 off, 1 = timer 2 on
+
+%ifdef TURBO_ENABLED
+PPIB_DEFAULT	equ	PPIB_KBREAD | PPIB_IO | PPIB_NOPARITY | PPIB_SW | PPIB_TURBO
+%else
+PPIB_DEFAULT	equ	PPIB_KBREAD | PPIB_IO | PPIB_NOPARITY | PPIB_SW
+%endif
 
 ; DMA controller 8237 page registers
 IO_DMA_PG2	equ	0x81		; page register, channel 2

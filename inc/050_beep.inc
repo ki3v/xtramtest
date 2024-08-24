@@ -10,14 +10,18 @@ BEEP_LENGTH	equ	0x8000		; Length of beep
 
 ; input: ah = length of beep
 do_beep:
-		mov	al, 00000011b
+		; mov	al, 00000011b
+		in	al, IO_PPI_B
+		or	al, PPIB_SPKR | PPIB_TIMER2
 		out	IO_PPI_B, al		; Start beep by setting 8255 pins PB1 and PB0 to HIGH.
-		; mov	al, 1			; 1 = short beep.
+
 	.loop:	mov	cx, BEEP_LENGTH
 		loop	$			; spin loop
 		dec	ah
 		jnz	.loop			; repeat spin loop ah times
-		mov	al, 0
+
+		in	al, IO_PPI_B
+		and	al, ~( PPIB_SPKR | PPIB_TIMER2 )
 		out	IO_PPI_B, al		; Stop the beep by setting 8255 pins PB1 and PB0 to LOW.
 
 		mov	cx, BEEP_LENGTH		; XXX xor	cx, cx

@@ -123,8 +123,10 @@ int_19_handler:
 		iret
 
 	.runtest:
-		; mov	si, option_start
-		; call	bios_puts
+		xor	ax, ax
+		out	IO_NMI_MASK, al		;   no NMI interrupts
+		mov	al, PPIB_DEFAULT
+		out	IO_PPI_B, al		; Disable parity checking
 
 		mov	ah, 0x0F		; get current video mode
 		int	0x10			; al now has current video mode (need for certain BIOS bugs)

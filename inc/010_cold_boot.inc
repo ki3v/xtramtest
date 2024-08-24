@@ -3,20 +3,16 @@
 
 ; From Super PC/Turbo XT BIOS
 
-; %define TURBO_ENABLED 1
 
-
-cold_boot:	
+cold_boot:
 		cld
 		xor	ax, ax				; Prepare to initialize
 		out	IO_NMI_MASK, al			;   no NMI interrupts
 
 		mov	al, 10011001b			; Program 8255 PIA chip
 		out	IO_PPI_CTL, al 			;   Ports A & C, inputs
-%ifdef TURBO_ENABLED
-		mov	al, 10100101b			; Set (non)turbo mode
+		mov	al, PPIB_DEFAULT		; Setup PPI port B configuration (parity, turbo, etc)
 		out	IO_PPI_B, al 			;   on main board
-%endif
 
 		mov	al, 01010100b			; IC 8253 inits memory refresh
 		out	IO_PIT_CTL, al 			;   chan 1 pulses IC 8237 to
