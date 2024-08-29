@@ -21,7 +21,11 @@ section_restore ; MARK: __ restore __
 optrom_sig:	dw	0xAA55
 optrom_size:	db	(RESET+0x10)/512
 
-optrom_start:
+optrom_start:	jmp	install_int19		; entry point for option ROM
+dos_start:	jmp	runtest			; entry point for loading from DOS
+
+
+install_int19:
 		pushf
 		push	bx
 		push	si
@@ -104,9 +108,9 @@ int_19_handler:
 		call	bios_puts
 		call	bios_read_input
 		cmp	al, 'T'
-		je	.runtest
+		je	runtest
 		cmp	al, 't'
-		je	.runtest
+		je	runtest
 
 		mov	si, option_skip
 		call	bios_puts
@@ -122,7 +126,7 @@ int_19_handler:
 		int	int19_save
 		iret
 
-	.runtest:
+runtest:
 		xor	ax, ax
 		out	IO_NMI_MASK, al		;   no NMI interrupts
 		mov	al, PPIB_DEFAULT

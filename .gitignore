@@ -8,6 +8,7 @@
 *.i
 *.o
 *.bin
+*.com
 *.dep
 .vscode
 cfg
