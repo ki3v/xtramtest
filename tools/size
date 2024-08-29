@@ -38,7 +38,7 @@ while ( <> ) {
 	}
 }
 
-printf "\n%6d bytes text\n%6d bytes bss\n", $text, $bss;
+printf "\n%6d bytes text\n%6d bytes bss\n", $text, $bss if $text or $bss;
 
 if ( exists $sect{".resetvec"} ) {
 	printf "\n%d bytes ROM space free\n\n", $sect{".resetvec"}{start} - $last;

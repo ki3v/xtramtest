@@ -10,44 +10,21 @@
 
 %include "defines.inc"
 
-%define marchu_startseg startseg
-%define marchu_endseg endseg
-
 ; ---------------------------------------------------------------------------
-section_save
-section .romdata ; MARK: __ .romdata __
-	; ram_col_header	db	"A  ErrM ErrB"
+section_save ; MARK: __ save __
 
 
-section .rwdata ; MARK: __ .rwdata __
-; ---------------------------------------------------------------------------
+
+
 
 ; ---------------------------------------------------------------------------
 section .lib ; MARK: __ .lib __
 ; ---------------------------------------------------------------------------
-; %define MARCHU_DELAY 8
-
-%ifdef MARCHU_DELAY
-marchu_delay:
-		push	cx
-		push	dx
-
-		mov	dl, MARCHU_DELAY
-		sub	cx,cx
-	.dloop:	loop	.dloop
-		dec	dl
-		jnz	.dloop
-
-		pop	dx
-		pop	cx
-		ret
-%endif
 
 
-
+; ---------------------------------------------------------------------------
 ; MARK: marchu
-marchu:
-; perrom march-U on 4k chunks, using stack, with error reporting
+; perform march-U on 4k chunks, using stack, with error reporting
 ; inputs:
 ;	al = test value
 ;	bx = start segment
@@ -62,58 +39,52 @@ marchu:
 ;	ah = error bits at current error (0 = no error)
 ;	dh = running error bits for current segment
 ;	es:di = address of the error
+marchu:
+		mov	[ss:test_label], word scr_label_march
+		mov	[ss:test_num], byte 0
 
 		xor	al, al			; test value for march is always 0
 
-		mov	[ss:test_num], byte 0
-		call	marchu_announce
-
 	.s0:	mov	bp, marchu_w0
-		call	ram_test_upwards
-
-		simulate_errors
-
-		call	marchu_announce
+		call	.test_up
+	
 	.s1:	mov	bp, marchu_r0w1r1w0
-		call	ram_test_upwards
-
-		simulate_errors
-
-		call	marchu_announce
+		call	.test_up
+	
 	.s2:	mov	bp, marchu_r0w1
-		call	ram_test_upwards
+		call	.test_up
+
 		not	al
-
-		simulate_errors
-
-		call	marchu_announce
+	
 	.s3:	mov	bp, marchu_r0w1r1w0
-		call	ram_test_downwards
-
-		simulate_errors
-
-		call	marchu_announce
-	.s4:	mov	bp, marchu_r0w1
-		call	ram_test_downwards
+		call	.test_down
+	
+	.s4:	mov	bp, marchu_r0w1	
+		call	.test_down
 
 		ret
 
-; MARK: marchu_announce
-marchu_announce:
-	%ifdef MARCHU_DELAY
-		cmp	[ss:test_num], byte 0
-		jz	nodelay
-		call	marchu_delay
-	nodelay:
-	%endif
-		mov	[ss:test_label], word scr_label_march
+.test_up:
 		call	scr_test_announce
-		add	[ss:test_num], word 1
+		call	ram_test_upwards
+		jmp	.finish
+
+.test_down:
+		call	scr_test_announce
+		call	ram_test_downwards
+.finish:
+		simulate_errors
+		inc	word [ss:test_num]
 		ret
 
 
-
-
+; ; ---------------------------------------------------------------------------
+; ; MARK: marchu_announce
+; marchu_announce:
+; 		call	scr_test_announce
+; 		; add	[ss:test_num], word 1
+; 		inc	word [ss:test_num]
+; 		ret
 
 
 ; march test components
@@ -134,79 +105,65 @@ marchu_announce:
 ;	es:di = address of the error
 ;	bp = continuation address (for after errors)
 
+; ---------------------------------------------------------------------------
 ; MARK: marchu_w0
 marchu_w0:	; w0
 		rep 	stosb		; fill the range with the test value
-		; xor	ah, ah		; no errors possible
-		; xor	dh, dh		; clear the error bits
-		xor	bp, bp		; indicate finshed (no continuation)
 		ret
 
+; ---------------------------------------------------------------------------
+; assumes DS=ES (stosb writes to ES:DI, [di] means [ds:di] by default
 ; MARK: marchu_r0w1r1w0
 marchu_r0w1r1w0:	; r0,w1,r1,w0	
 	.loop:	; r0
-		mov	ah, [es:di]	; read the byte [r0]
+		mov	ah, [di]	; read the byte [r0]
 		xor	ah, al		; compare the test value with the byte
-		jnz	.b.cont		; if error, break out
-	.b:	; w1
+		or	dh, ah		; accumulate errors
+		; w1
 		not	al		; now INVERTED
-		mov	[es:di], al	; write the inverted test value [w1]
-	.c:	; r1
-		mov	ah, [es:di]	; read the byte [r1]
+		mov	[di], al	; write the inverted test value [w1]
+		; r1
+		mov	ah, [di]	; read the byte [r1]
 		xor	ah, al		; compare the test value with the byte
-		jnz	.d.cont		; if error, break out
-	.d:	; w0
+		or	dh, ah		; accumulate errors
+		; w0
 		not	al		; now ORIGINAL
 		stosb			; write the test value [w0], inc di
+
+		cmp	dh, 0xFF	; check for all bits in error to fail fast on empty banks
+		je	.end		; if so, give up on this segment
+
 		loop	.loop		; repeat for the next byte
 
-		xor	bp, bp		; indicate finshed (no continuation)
-	.done	or	dh, ah		; accumulate errors
-		ret			; segment done
+	.end:	ret			; segment done
 
-	; use these stubs for the error conditions
-	; this speeds up the loop - not taking the conditional jump saves several cycles per iteration
-	.b.cont:
-		mov	bp, .b		; set continuation address
-		jmp	.done		; save a few bytes
-	.d.cont:
-		mov	bp, .d		; set continuation address
-		jmp	.done		; save a few bytes
-
+; ---------------------------------------------------------------------------
 ; MARK: marchu_r0w1
 marchu_r0w1:	; r0,w1
 	.loop:	; r0
-		mov	ah, [es:di]	; read the byte [r0]
+		mov	ah, [di]	; read the byte [r0]
 		xor	ah, al		; compare the test value with the byte
-		jnz	.b.cont		; if error, break out
-	.b:	; w1
+		or	dh, ah		; accumulate errors
+		; w1
 		not	al		; now INVERTED
 		stosb			; write the test value [w1], inc di
 		not	al		; now ORIGINAL
-		loop	.loop	; repeat for the next byte
+		loop	.loop		; repeat for the next byte
 
-		xor	bp, bp		; indicate finshed (no continuation)
-	.done	or	dh, ah		; accumulate errors
-		ret			; segment done
+	.end:	ret			; segment done
 
-	; use these stubs for the error conditions
-	; this speeds up the loop - not taking the conditional jump saves several cycles per iteration
-	.b.cont:
-		mov	bp, .b		; set continuation address
-		jmp	.done		; save a few bytes
 
 ; ---------------------------------------------------------------------------
 section_restore ; MARK: __ restore __
 ; ---------------------------------------------------------------------------
 
 
+
+
+
+; ---------------------------------------------------------------------------
 ; MARK: test_dram
 test_dram:
-; inputs:
-;	al = test value
-;	bx = start segment
-; 	dl = number of segments to test (will test dl*si bytes total)
-; 	si = size of segment to test (must be a multiple of 16)
 		mov	byte [ss:test_offset], 0	; set the column offset for the test
 		call	marchu
 

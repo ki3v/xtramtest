@@ -18,7 +18,7 @@ The ROM does not currently test parity RAM or the parity checking circuit. Parit
 
 ## Using this ROM to test RAM in your PC/XT or clone
 
-There are two ways to use this ROM to test RAM in your computer.
+There are three ways to use this ROM to test RAM in your computer.
 
 ### Method 1: Replacing the system BIOS with the XTRAMTEST ROM
 
@@ -80,6 +80,20 @@ Additionally, not all BIOSes support option ROMs (early IBM PC and XT BIOSes did
 The most reliable results will be obtained by replacing the system BIOS ROM with XTRAMTEST for testing.
 
 However, if you do not have a working MDA or CGA card available, and your first bank of RAM is working well enough to initialize the option ROM, you _may_ be able to get the XTRAMTEST working as an option ROM with EGA/VGA type cards.
+
+### Method 2: Running as a program from DOS
+
+Finally, a DOS program called `LOADXTRT.COM` is provided.  This is a very simple program that will load the ROM image into an unused section of video RAM if it can find it, then launch the ROM from there.
+
+This is an easy way to try out the RAM test, or to run it when it is difficult or inconvenient for you to create a ROM chip from one of the provided images.
+
+`LOADXTRT.COM` is probably the method of launching XTRAMTEST most compatible with EGA/VGA cards, as they are fully initialized by their video BIOS before the RAM test is even loaded.
+
+#### Disadvantages of running XTRAMTEST using `LOADXTRT.COM` from DOS
+
+The same disadvantages as running as an option ROM apply to running as a DOS program, only more so.  Your system must be fairly stable to begin with, and able to boot to DOS and load programs from some kind of storage.
+
+As such, this is primarily useful if you have a machine that runs, but you suspect there are marginal or intermittent RAM chips.
 
 ## Memory layout of a typical PC/XT clone motherboard
 

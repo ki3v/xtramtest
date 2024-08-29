@@ -69,9 +69,10 @@ section .lib ; MARK: __ .lib __
 ; ---------------------------------------------------------------------------
 
 ; procedures to include in the ROM
-%include "delay.asm"
-%include "postcodes_out.asm"
+; %include "delay.asm"
 %include "screen.asm"
+%include "ram_common.asm"
+%include "ram_marchu_nostack.asm"
 
 ; ---------------------------------------------------------------------------
 section .text ; MARK: __ .text __
@@ -79,52 +80,41 @@ section .text ; MARK: __ .text __
 
 %include "option_rom.asm"
 
-; MARK: DiagStart
-DiagStart:
 ; ************************************************************************************************
 ; Initialization modules
-	%include "010_cold_boot.inc"
-	%include "030_video.inc"
-	%include "050_beep.inc"
-	%include "060_vram.inc"
+%include "010_cold_boot.inc"
+%include "030_video.inc"
 
-	call	scr_clear
-	call 	draw_screen
+xtramtest_start:
+		%include "050_beep.inc"
+		%include "060_vram.inc"
 
-; MARK: DiagLoop
-DiagLoop:
-; ************************************************************************************************
-; MAIN DIAGNOSTIC LOOP
-; ************************************************************************************************
-	__CHECKPOINT__ 0x10 ;++++++++++++++++++++++++++++++++++++++++
+		call	scr_clear
+		call 	draw_screen
 
-	; Disable maskable interrupts, and set the direction flag to increment.
-	cli
-	cld
+		; Disable maskable interrupts, and set the direction flag to increment.
+		cli
+		cld
 
-	add	word [ss:pass_count], 1		; Increment the pass count.
+xtramtest_loop:
+		add	word [ss:pass_count], 1		; Increment the pass count.
 
-	; __CHECKPOINT__ 0x12 ;++++++++++++++++++++++++++++++++++++++++
-	%include "ram_common.asm"
-	%include "ram_marchu.asm"
-	%include "ram_bitpat.asm"
-	jmp	DiagLoop
+		%include "ram_marchu.asm"
+		%include "ram_ganssle.asm"
+
+		jmp	xtramtest_loop
 
 
 ;------------------------------------------------------------------------------
 ; Power-On Entry Point
 ;------------------------------------------------------------------------------
-; ---------------------------------------------------------------------------
 section .resetvec ; MARK: __ .resetvec __
 ; ---------------------------------------------------------------------------
-PowerOn:
-	jmp	BASESEG:cold_boot	; CS will be 0F000h
-
+PowerOn:	jmp	BASESEG:cold_boot	; CS will be 0F000h
  
-S_FFF5:
-	db __DATE__		; Assembled date (YYYY-MM-DD)
-	db 0			; space for checksum byte
+S_FFF5:		db __DATE__		; Assembled date (YYYY-MM-DD)
+		db 0			; space for checksum byte
 
 
 section .rwdata
-	rwdata_end:
+rwdata_end:
