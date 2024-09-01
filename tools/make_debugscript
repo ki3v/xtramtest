@@ -83,6 +83,11 @@ for $section ( sort keys %SYM ) {
 	}
 }
 
+# also break on explicit addresses
+for my $addr ( split( / /, $ENV{BREAK} ) ) {
+	$BREAKPOINTS{hex( $addr )} = 1 if $addr =~ m/^(0x)?[0-9a-f]+$/i;
+}
+
 print "\n\n";
 
 # now process the list file to comment on jumps and calls
@@ -209,7 +214,7 @@ for my $addr ( sort keys %COMMENTS ) {
 for my $addr ( sort keys %BREAKPOINTS ) {
 	printf "bps %X\n", $addr;
 }
-
+printf "go\n" if scalar %BREAKPOINTS;
 
 # open my $lsymfh, ">", $lsym or die "couldn't open $lsym: $!";
 

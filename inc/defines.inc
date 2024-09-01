@@ -38,6 +38,22 @@ IO_PIT_CH1	equ	0x41		; channel 1
 IO_PIT_CH2	equ	0x42		; channel 2
 IO_PIT_CTL	equ	0x43		; control
 
+PIT_BCD		equ	0x01		; 1 = BCD mode, 0 = binary mode
+PIT_MODE0	equ	0x00		; interrupt on terminal count
+PIT_MODE1	equ	0x02		; hardware re-triggerable one-shot
+PIT_MODE2	equ	0x04		; rate generator
+PIT_MODE3	equ	0x06		; square wave generator
+PIT_MODE4	equ	0x08		; software triggered strobe
+PIT_MODE5	equ	0x0A		; hardware triggered strobe
+PIT_SEL_CH0	equ	0x00		; select channel 0
+PIT_SEL_CH1	equ	0x40		; select channel 1
+PIT_SEL_CH2	equ	0x80		; select channel 2
+PIT_READBACK	equ	0xC0		; read-back command (only on 8254, not on XT)
+PIT_LATCH	equ	0x00		; latch count value
+PIT_RW_MSB	equ	0x10		; read/write MSB only
+PIT_RW_LSB	equ	0x20		; read/write LSB only
+PIT_RW_BOTH	equ	0x30		; read/write LSB, then MSB
+
 ; Programmable Peripheral Interface 8255
 IO_PPI_A	equ	0x60		; port A
 IO_PPI_B	equ	0x61		; port B
@@ -58,6 +74,34 @@ PPIB_DEFAULT	equ	PPIB_KBREAD | PPIB_IO | PPIB_NOPARITY | PPIB_SW | PPIB_TURBO
 %else
 PPIB_DEFAULT	equ	PPIB_KBREAD | PPIB_IO | PPIB_NOPARITY | PPIB_SW
 %endif
+
+IO_PIC1_CMD	equ	0x20		; PIC1 command register
+IO_PIC1_DATA	equ	0x21		; PIC1 data register
+
+PIC_ICW1_ICW4	equ	0x01		; 1=ICW4 needed
+PIC_ICW1_SINGLE	equ	0x02		; 1=single 8259, 0=cascaded 8259
+PIC_ICW1_4VECT	equ	0x04		; 1=4-byte vectors, 0=8-byte vectors
+PIC_ICW1_LTRIG	equ	0x08		; 1=level triggered, 0=edge triggered
+PIC_ICW1_INIT	equ	0x10		; 1=initialize, 0=no initialization
+
+XT_PIC1_ICW1	equ	PIC_ICW1_ICW4 | PIC_ICW1_SINGLE | PIC_ICW1_INIT
+XT_PIC1_ICW2	equ	0x08		; IRQ0-7 vector offset
+
+PIC_ICW4_86	equ	0x01		; 1=8086 mode, 0=MCS-80/85 mode
+PIC_ICW4_AUTO	equ	0x02		; 1=auto EOI, 0=normal EOI
+PIC_ICW4_BUF_S	equ	0x08		; buffered mode slave
+PIC_ICW4_BUF_M	equ	0x0C		; buffered mode master
+PIC_ICW4_SFNM	equ	0x10		; 1=special fully nested mode, 0=not special
+
+XT_PIC1_ICW4	equ	PIC_ICW4_86 | PIC_ICW4_BUF_S
+
+PIC_OCW2_EOI	equ	0x20		; end of interrupt
+PIC_OCW2_SEOI	equ	0x60		; specific EOI (OR with IRQ number)
+
+PIC_OCW3_RIS	equ	0x0A		; read interrupt request register
+PIC_OCW3_RIR	equ	0x0B		; read interrupt in-service register
+
+IRQ_TIMER	equ	0		; IRQ 0 = timer
 
 ; DMA controller 8237 page registers
 IO_DMA_PG2	equ	0x81		; page register, channel 2
@@ -84,6 +128,7 @@ IO_CGA_STAT	equ	0x3DA		; status register
 
 SEG_CGA_VRAM	equ	0xB800		; CGA video RAM segment
 
+SEG_VIDEO_BIOS	equ	0xC000		; Video BIOS segment
 
 ;-------------------------------------------------------------------------------
 ;Variables stored in unused MDA/CGA video RAM, or 4 KB at A0000.
