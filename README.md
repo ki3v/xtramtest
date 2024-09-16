@@ -6,7 +6,7 @@ See the YouTube video on [Adrian's Digital Basement](https://youtube.com/@adrian
 
 ![Screenshot](img/screenshot.png)
 
-This is a diagnostic ROM for testing RAM in an IBM PC/XT computer or clone.  It is used by temporarily replacing the BIOS ROM in your machine with this code programmed onto an EPROM chip, which will boot directly into the RAM testing program without requiring functioning RAM or file storage.  It does currnetly require a CGA or MDA adapter both for reporting and for using the video RAM on these cards, allowing testing of every byte of conventional RAM in your system.
+This is a diagnostic ROM for testing RAM in an IBM PC/XT computer or clone.  It is used by temporarily replacing the BIOS ROM in your machine with this code programmed onto an EPROM chip, which will boot directly into the RAM testing program without requiring functioning RAM or file storage.  It does currently require a CGA or MDA adapter both for reporting and for using the video RAM on these cards, allowing testing of every byte of conventional RAM in your system.
 
 The ROM currently performs two types of RAM test:
 
@@ -121,7 +121,7 @@ Build instructions will be forthcoming, but look in the `tools` directory for th
 
 ## Acknowledgements and dedication
 
-- This ROM was made possible by starting with [Ruud's Diagnostic ROM](https://www.minuszerodegrees.net/ruuds_diagnostic_rom/clones/clones.htm), by Ruud Baltissen and modem7, at minuszerodegrees.net.  As seen above, we also rely extensivly on their well-researched documentation.
+- This ROM was made possible by starting with [Ruud's Diagnostic ROM](https://www.minuszerodegrees.net/ruuds_diagnostic_rom/clones/clones.htm), by Ruud Baltissen and modem7, at minuszerodegrees.net.  As seen above, we also rely extensively on their well-researched documentation.
 
 - The compact initialization code is from the [Super PC/Turbo XT BIOS](https://github.com/virtualxt/pcxtbios), which is public domain.
 
