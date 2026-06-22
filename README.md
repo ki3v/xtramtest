@@ -28,7 +28,7 @@ Two images are included in the Releases (see the right side of the GitHub projec
 
 You may want to remove all other ISA cards (besides the video card) and remove all the other ROM chips from the system before running this ROM, just to eliminate any potential issues.
 
-The Keyboard or any other peripherals are not tested or needed to run this ROM. Currently the speaker is not used either other than to beep at the beginning to signal that the ROM has started, although beep code support may be added in the future.
+The Keyboard or any other peripherals are not tested or needed to run this ROM. Currently the speaker is not used either other than to beep at the beginning to signal that the ROM has started, although beep code support may be added in the future.  **Currently, the code just beeps short-long-short when it starts, so you know it's this code running.**
 
 There are a few different ways to use this ROM, depending on your hardware. Installing this ROM is generally similar to using the SuperSoft/Landmark Diagnostic and Ruud's Diagnostic ROM for the IBM PC and PC XT. This link on minuszerodegrees.net describes the nuance of getting this running on various IBM machines:
 
